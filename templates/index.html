@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Buddy System</title>
+    <link href="{{ url_for('static', filename='background.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="header-navbar">
+        <div class="navbar">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('register') }}">Register</a>
+        </div>
+        <h1 class="header-title">University Buddy System</h1>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <h2>Welcome to Our Buddy Program</h2>
+            <p>The University Buddy System helps new students adjust to university life by pairing them with experienced student mentors.</p>
+            
+            <div class="button-group">
+                <a href="{{ url_for('login') }}" class="btn">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-secondary">Register</a>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h3>Program Benefits</h3>
+                <ul>
+                    <li>Personalized guidance from experienced students</li>
+                    <li>Academic support and study tips</li>
+                    <li>Help navigating university services</li>
+                    <li>Social connections and networking</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

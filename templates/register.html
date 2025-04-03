@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - University Buddy System</title>
+    <link href="{{ url_for('static', filename='background.css') }}" rel="stylesheet">
+    <style>
+        .register-container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .radio-group {
+            margin: 15px 0;
+        }
+
+        .radio-option {
+            display: inline-block;
+            margin-right: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-navbar">
+        <div class="navbar">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('register') }}">Register</a>
+        </div>
+        <h1 class="header-title">University Buddy System</h1>
+    </div>
+
+    <div class="container">
+        <div class="main-content register-container">
+            <h2>Create an Account</h2>
+            
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+            </div>
+
+            <form action="{{ url_for('register') }}" method="POST">
+                <div class="form-group">
+                    <label for="full_name">Full Name</label>
+                    <input type="text" id="full_name" name="full_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <div class="form-group radio-group">
+                    <label>I want to register as:</label>
+                    <div class="radio-option">
+                        <input type="radio" id="student" name="role" value="student" checked>
+                        <label for="student">Student</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="buddy" name="role" value="buddy">
+                        <label for="buddy">Buddy</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">Register</button>
+                <p style="margin-top: 20px;">Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - University Buddy System</title>
+    <link href="{{ url_for('static', filename='background.css') }}" rel="stylesheet">
+    <style>
+        .dashboard-section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #871f2d;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .action-btn {
+            padding: 5px 10px;
+            margin: 0 5px;
+            border-radius: 3px;
+            text-decoration: none;
+            color: white;
+        }
+        .approve-btn {
+            background-color: #28a745;
+        }
+        .reject-btn {
+            background-color: #dc3545;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 30%;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #871f2d;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-navbar">
+        <div class="navbar">
+            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+            <a href="#">Users</a>
+            <a href="#">Matches</a>
+            <a href="#">Reports</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        <h1 class="header-title">Admin Dashboard</h1>
+    </div>
+
+    <div class="container">
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Pending User Approvals</h2>
+            {% if pending_users %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Registered On</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in pending_users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.full_name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.role }}</td>
+                            <td>{{ user.created_at }}</td>
+                            <td>
+                                <a href="{{ url_for('approve_user', user_id=user.id) }}" class="action-btn approve-btn">Approve</a>
+                                <a href="{{ url_for('reject_user', user_id=user.id) }}" class="action-btn reject-btn">Reject</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No pending user approvals.</p>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Recent Matches</h2>
+            {% if recent_matches %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Match ID</th>
+                            <th>Buddy</th>
+                            <th>Student</th>
+                            <th>Status</th>
+                            <th>Match Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for match in recent_matches %}
+                        <tr>
+                            <td>{{ match.id }}</td>
+                            <td>{{ match.buddy_name }}</td>
+                            <td>{{ match.student_name }}</td>
+                            <td>{{ match.status }}</td>
+                            <td>{{ match.created_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No recent matches found.</p>
+            {% endif %}
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>Total Users</h3>
+                <div class="stat-value">{% if stats %}{{ stats.total_users }}{% else %}0{% endif %}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Matches</h3>
+                <div class="stat-value">{% if stats %}{{ stats.active_matches }}{% else %}0{% endif %}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Pending Approvals</h3>
+                <div class="stat-value">{% if pending_users %}{{ pending_users|length }}{% else %}0{% endif %}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

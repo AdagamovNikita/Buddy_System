@@ -5,20 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="{{ url_for('static', filename='background.css') }}" rel="stylesheet">
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
-            background: #f7f7f7;
+            background: linear-gradient(120deg, #e0eafc, #cfdef3);
             color: #333;
+            transition: background-color 0.3s ease;
         }
+
         .header-navbar {
-            background-color: #3c4d61; /* Dark background for the navbar */
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background: linear-gradient(135deg, #3c4d61, #5a6f85);
             color: white;
             padding: 15px 0;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transition: background 0.3s ease;
         }
 
         .navbar {
@@ -31,37 +40,33 @@
         }
 
         .navbar a {
-            color: white;  
+            color: white;
             text-decoration: none;
             font-size: 16px;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 5px;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        .navbar a {
-            background-color: #3c4d61;  
+            transition: background 0.3s ease, transform 0.3s ease;
         }
 
         .navbar a:hover {
-            background-color: #5a6f85;  
-            color: white; 
+            background-color: #5a6f85;
+            transform: translateY(-2px);
         }
 
         .navbar a:focus {
-            outline: none; 
-            background-color: #5a6f85;  
+            outline: none;
+            background-color: #5a6f85;
             color: white;
         }
 
         .navbar a.active {
-            background-color: #4e6276; 
+            background-color: #4e6276;
         }
 
         .top-line {
             width: 100%;
             height: 3px;
-            background-color: #3c4d61;  
+            background-color: #3c4d61;
             margin: 0;
         }
 
@@ -69,10 +74,24 @@
             max-width: 800px;
             margin: 40px auto;
             padding: 40px;
-            background-color: #fff;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .profile-container:hover {
@@ -99,6 +118,11 @@
             font-weight: bold;
         }
 
+        .profile-data i {
+            margin-right: 8px;
+            color: #5a6f85;
+        }
+
         .btn {
             display: inline-block;
             padding: 12px 24px;
@@ -110,12 +134,13 @@
             border-radius: 8px;
             font-size: 18px;
             font-weight: bold;
-            transition: background 0.3s ease, transform 0.3s ease;
+            transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .btn:hover {
             background-color: #5a6f85;
             transform: scale(1.05);
+            box-shadow: 0 0 12px rgba(90, 111, 133, 0.6);
         }
 
         @media (max-width: 768px) {
@@ -137,28 +162,28 @@
 <body>
     <div class="top-line"></div>
 
-    <div class="navbar">
-        
-        {% if user_role == 'buddy' %}
-            <a href="{{ url_for('buddy_dashboard') }}" class="{{ 'active' if current_page == 'buddy_dashboard' else '' }}">Buddy Dashboard</a>
-        {% elif user_role == 'student' %}
-            <a href="{{ url_for('student_dashboard') }}" class="{{ 'active' if current_page == 'student_dashboard' else '' }}">Student Dashboard</a>
-        {% endif %}
-        
-        <a href="{{ url_for('logout') }}" class="{{ 'active' if current_page == 'logout' else '' }}">Logout</a>
+    <div class="header-navbar">
+        <div class="navbar">
+            {% if user_role == 'buddy' %}
+                <a href="{{ url_for('buddy_dashboard') }}" class="{{ 'active' if current_page == 'buddy_dashboard' else '' }}">Buddy Dashboard</a>
+            {% elif user_role == 'student' %}
+                <a href="{{ url_for('student_dashboard') }}" class="{{ 'active' if current_page == 'student_dashboard' else '' }}">Student Dashboard</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="{{ 'active' if current_page == 'logout' else '' }}">Logout</a>
+        </div>
     </div>
 
     <div class="profile-container">
         <h2 class="profile-header">Your Profile</h2>
-        <div class="profile-data"><strong>Student ID:</strong> {{ profile.student_id_number }}</div>
-        <div class="profile-data"><strong>Age:</strong> {{ profile.age }}</div>
-        <div class="profile-data"><strong>Gender:</strong> {{ profile.gender }}</div>
-        <div class="profile-data"><strong>Nationality:</strong> {{ profile.nationality }}</div>
-        <div class="profile-data"><strong>Major:</strong> {{ profile.major }}</div>
-        <div class="profile-data"><strong>Academic Year:</strong> {{ profile.academic_year }}</div>
-        <div class="profile-data"><strong>Languages:</strong> {{ profile.languages }}</div>
-        <div class="profile-data"><strong>Bio:</strong> {{ profile.bio }}</div>
-        <div class="profile-data"><strong>Phone Number:</strong> {{ profile.phone_number }}</div>
+        <div class="profile-data"><i class="fa-solid fa-id-card"></i><strong>Student ID:</strong> {{ profile.student_id_number }}</div>
+        <div class="profile-data"><i class="fa-solid fa-birthday-cake"></i><strong>Age:</strong> {{ profile.age }}</div>
+        <div class="profile-data"><i class="fa-solid fa-genderless"></i><strong>Gender:</strong> {{ profile.gender }}</div>
+        <div class="profile-data"><i class="fa-solid fa-flag"></i><strong>Nationality:</strong> {{ profile.nationality }}</div>
+        <div class="profile-data"><i class="fa-solid fa-book-open"></i><strong>Major:</strong> {{ profile.major }}</div>
+        <div class="profile-data"><i class="fa-solid fa-graduation-cap"></i><strong>Academic Year:</strong> {{ profile.academic_year }}</div>
+        <div class="profile-data"><i class="fa-solid fa-language"></i><strong>Languages:</strong> {{ profile.languages }}</div>
+        <div class="profile-data"><i class="fa-solid fa-pencil-alt"></i><strong>Bio:</strong> {{ profile.bio }}</div>
+        <div class="profile-data"><i class="fa-solid fa-phone-alt"></i><strong>Phone Number:</strong> {{ profile.phone_number }}</div>
 
         <a href="{{ url_for('complete_profile') }}" class="btn">Edit Profile</a>
     </div>

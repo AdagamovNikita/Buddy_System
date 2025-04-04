@@ -308,38 +308,95 @@ def register():
 
 @app.route("/complete-profile", methods=["GET", "POST"])
 def complete_profile():
-    if "user_id" not in session or session.get("is_admin"):
-        flash("Please login to access this page", "warning")
+    if "user_id" not in session:
+        flash("Please log in to complete your profile.", "warning")
         return redirect(url_for("login"))
-    
+
+    user_id = session["user_id"]
+    print(f"User ID from session: {user_id}")  
+
+    conn = get_db_connection()
+    existing_profile = conn.execute(
+        "SELECT * FROM user_details WHERE user_id = ?", (user_id,)
+    ).fetchone()
+    conn.close()
+
+    print(f"Existing profile: {existing_profile}")  
+
     if request.method == "POST":
         student_id = request.form.get("student_id")
         age = request.form.get("age")
         gender = request.form.get("gender")
         nationality = request.form.get("nationality")
-        major = request.form["major"]
-        academic_year = request.form["academic_year"]
+        major = request.form.get("major")
+        academic_year = request.form.get("academic_year")
         languages = request.form.get("languages")
         bio = request.form.get("bio")
         phone = request.form.get("phone")
-        
+
+        print(f"Form Data Received: {student_id}, {age}, {gender}, {nationality}, {major}, {academic_year}, {languages}, {bio}, {phone}")
+
         conn = get_db_connection()
         try:
-            conn.execute(
-                """INSERT INTO user_details 
-                (user_id, student_id_number, age, gender, nationality, major, academic_year, languages, bio, phone_number)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (session["user_id"], student_id, age, gender, nationality, major, academic_year, languages, bio, phone)
-            )
+            if existing_profile:
+                print("Updating existing profile...")  
+                conn.execute(
+                    """UPDATE user_details 
+                    SET student_id_number = ?, age = ?, gender = ?, nationality = ?, 
+                        major = ?, academic_year = ?, languages = ?, bio = ?, phone_number = ? 
+                    WHERE user_id = ?""",
+                    (student_id, age, gender, nationality, major, academic_year, languages, bio, phone, user_id)
+                )
+            else:
+                print("Inserting new profile...") 
+                conn.execute(
+                    """INSERT INTO user_details 
+                    (user_id, student_id_number, age, gender, nationality, major, academic_year, languages, bio, phone_number)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (user_id, student_id, age, gender, nationality, major, academic_year, languages, bio, phone)
+                )
             conn.commit()
-            flash("Profile completed successfully!", "success")
-            return redirect(url_for(f"{session['role']}_dashboard"))
+            print("Profile saved successfully!")  
+            flash("Profile saved successfully!", "success")
+            return redirect(url_for("view_profile"))
         except Exception as e:
+            print(f"Error saving profile: {e}")  
             flash(f"Error saving profile: {str(e)}", "error")
         finally:
             conn.close()
-    
-    return render_template("complete_profile.html")
+
+    return render_template("complete_profile.html", profile=existing_profile)
+
+@app.route("/view_profile")
+def view_profile():
+    user_id = session.get("user_id")
+    print(f"Accessing profile for user_id: {user_id}")  
+
+    if not user_id:
+        print("User ID is missing. Redirecting to login.")
+        flash("Session expired. Please log in again.", "warning")
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+
+    profile = conn.execute("SELECT * FROM user_details WHERE user_id = ?", (user_id,)).fetchone()
+
+    role = conn.execute("SELECT role FROM users WHERE id = ?", (user_id,)).fetchone()
+
+    conn.close()
+
+    print(f"Profile data fetched: {profile}")  
+    print(f"User role fetched: {role}")  
+
+    if not profile:
+        print("No profile found, redirecting to complete-profile.")  
+        flash("Profile not found. Please complete your profile.", "warning")
+        return redirect(url_for("complete_profile"))
+
+    user_role = role[0] if role else None
+
+    return render_template("view_profile.html", profile=profile, user_role=user_role)
+
 
 @app.route("/admin/dashboard")
 def admin_dashboard():

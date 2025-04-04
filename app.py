@@ -361,7 +361,7 @@ def complete_profile():
             return redirect(url_for("view_profile"))
         except Exception as e:
             print(f"Error saving profile: {e}")  
-            flash(f"Error saving profile: {str(e)}", "error")
+            flash(f"Error saving profile: Unique ID required!")
         finally:
             conn.close()
 

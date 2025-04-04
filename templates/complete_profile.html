@@ -173,9 +173,18 @@
                     <label for="nationality">Nationality</label>
                     <input type="text" id="nationality" name="nationality" required value="{{ profile.nationality if profile else '' }}">
                 </div> -->
+
                 <div class="form-group">
                     <label for="major">Major</label>
-                    <input type="text" id="major" name="major" required value="{{ profile.major if profile else '' }}">
+                    <select id="major" name="major" required>
+                        <option value="Bachelor of Arts in Philosophy, Politics and Economics" {% if profile and profile.major == 'Bachelor of Arts in Philosophy, Politics and Economics' %}selected{% endif %}>Bachelor of Arts in Philosophy, Politics and Economics</option>
+                        <option value="Bachelor of Science in Psychology" {% if profile and profile.major == 'Bachelor of Science in Psychology' %}selected{% endif %}>Bachelor of Science in Psychology</option>
+                        <option value="Bachelor of Science in Computer Science" {% if profile and profile.major == 'Bachelor of Science in Computer Science' %}selected{% endif %}>Bachelor of Science in Computer Science</option>
+                        <option value="Bachelor of Science in Industrial Engineering" {% if profile and profile.major == 'Bachelor of Science in Industrial Engineering' %}selected{% endif %}>Bachelor of Science in Industrial Engineering</option>
+                        <option value="Bachelor of Business Administration in Management" {% if profile and profile.major == 'Bachelor of Business Administration in Management' %}selected{% endif %}>Bachelor of Business Administration in Management</option>
+                        <option value="Master of Science in Engineering Management" {% if profile and profile.major == 'Master of Science in Engineering Management' %}selected{% endif %}>Master of Science in Engineering Management</option>
+                        <option value="Master of Science in Business Analytics" {% if profile and profile.major == 'Master of Science in Business Analytics' %}selected{% endif %}>Master of Science in Business Analytics</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="academic_year">Academic Year</label>
@@ -322,6 +331,7 @@
                         <option value="Oman" {% if profile and profile.nationality == 'Oman' %}selected{% endif %}>Oman</option>
                         <option value="Pakistan" {% if profile and profile.nationality == 'Pakistan' %}selected{% endif %}>Pakistan</option>
                         <option value="Palau" {% if profile and profile.nationality == 'Palau' %}selected{% endif %}>Palau</option>
+                        <option value="Palestine" {% if profile and profile.nationality == 'Palestine' %}selected{% endif %}>Palestine</option>
                         <option value="Panama" {% if profile and profile.nationality == 'Panama' %}selected{% endif %}>Panama</option>
                         <option value="Papua New Guinea" {% if profile and profile.nationality == 'Papua New Guinea' %}selected{% endif %}>Papua New Guinea</option>
                         <option value="Paraguay" {% if profile and profile.nationality == 'Paraguay' %}selected{% endif %}>Paraguay</option>

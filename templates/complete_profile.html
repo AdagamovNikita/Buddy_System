@@ -211,10 +211,12 @@
                     <label for="student_id">Student ID</label>
                     <input type="text" id="student_id" name="student_id" required value="{{ profile.student_id_number if profile else '' }}">
                 </div>
+
                 <div class="form-group">
                     <label for="age">Age</label>
-                    <input type="number" id="age" name="age" required value="{{ profile.age if profile else '' }}">
+                    <input type="number" id="age" name="age" required min="1" value="{{ profile.age if profile else '' }}">
                 </div>
+
                 <div class="form-group">
                     <label for="gender">Gender</label>
                     <select id="gender" name="gender" required>
@@ -448,16 +450,94 @@
                         <option value="Zimbabwe" {% if profile and profile.nationality == 'Zimbabwe' %}selected{% endif %}>Zimbabwe</option>
                     </select>
                 </form>
+                
 
+
+                <style>
+                    .language-tag {
+                        display: inline-block;
+                        background-color: #1e7cc5;
+                        padding: 5px 10px;
+                        margin: 3px;
+                        border-radius: 15px;
+                        font-size: 0.85rem;
+                    }
+                </style>
                 <div class="form-group">
-                    <label for="languages">Languages</label>
-                    <input type="text" id="languages" name="languages" required value="{{ profile.languages if profile else '' }}">
+                    <label for="languages">Languages (comma separated)</label>
+                    <input 
+                        type="text" 
+                        id="languages" 
+                        name="languages" 
+                        required 
+                        maxlength="80" 
+                        placeholder="e.g. English, Arabic, Greek" 
+                        value="{{ profile.languages if profile else '' }}" 
+                        oninput="updateLanguages()"
+                    >
+                    <div id="languageTags" style="margin-top: 10px;"></div>
+                    <small id="charCount" style="display: block; margin-top: 5px; color: #555;">Character count: 0/80</small>
                 </div>
-
+                
+                <script>
+                    function updateLanguages() {
+                        const input = document.getElementById('languages');
+                        const tagsContainer = document.getElementById('languageTags');
+                        const charCountDisplay = document.getElementById('charCount');
+                
+                        const value = input.value;
+                        const languages = value.split(',').map(lang => lang.trim()).filter(Boolean);
+                
+                        charCountDisplay.textContent = `Character count: ${value.length}/80`;
+                
+                        if (value.length > 80) {
+                            input.value = value.slice(0, 80);
+                        }
+                
+                        tagsContainer.innerHTML = '';
+                        languages.forEach(lang => {
+                            const tag = document.createElement('span');
+                            tag.classList.add('language-tag');
+                            tag.textContent = lang;
+                            tagsContainer.appendChild(tag);
+                        });
+                    }
+                
+                    document.addEventListener('DOMContentLoaded', updateLanguages);
+                </script>
+                
+                
                 <div class="form-group">
                     <label for="bio">Short Bio</label>
-                    <textarea id="bio" name="bio" rows="4" required>{{ profile.bio if profile else '' }}</textarea>
+                    <textarea id="bio" name="bio" rows="4" required oninput="checkCharacterCount()" maxlength="2000">{{ profile.bio if profile else '' }}</textarea>
+                    <small id="charCount2" style="display: block; margin-top: 5px; color: #555;">Character count: 0/2000</small>
+                    <small id="warning2" style="display: none; color: red; font-size: 0.875rem;">You are reaching the 2,000-character limit.</small>
                 </div>
+                
+                <script>
+                    function checkCharacterCount() {
+                        const bioTextarea = document.getElementById('bio');
+                        const charCountDisplay = document.getElementById('charCount2');
+                        const warningDisplay = document.getElementById('warning2');
+                        
+                        const text = bioTextarea.value; 
+                        const charCount = text.length; 
+                
+                        charCountDisplay.textContent = `Character count: ${charCount}/2000`;
+                                        
+                        if (charCount >= 1800 && charCount < 2000) {
+                            warningDisplay.style.display = 'inline';
+                        } else {
+                            warningDisplay.style.display = 'none';
+                        }
+                
+                        if (charCount > 2000) {
+                            bioTextarea.value = text.slice(0, 2000); 
+                        }
+                    }
+                </script>
+                
+
 
                 <div class="form-group">
                     <label for="phone">Phone Number</label>

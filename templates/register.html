@@ -11,17 +11,14 @@
             margin: 50px auto;
             padding: 30px;
         }
-
         .form-group {
             margin-bottom: 20px;
         }
-
         label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
         }
-
         input[type="text"],
         input[type="password"],
         input[type="email"],
@@ -32,14 +29,20 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
-
         .radio-group {
             margin: 15px 0;
         }
-
         .radio-option {
             display: inline-block;
             margin-right: 15px;
+        }
+        .email-check-btn {
+            margin-top: 5px;
+        }
+        .buddy-eligibility-note {
+            color: #871f2d;
+            font-style: italic;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -71,13 +74,8 @@
 
             <form action="{{ url_for('register') }}" method="POST">
                 <div class="form-group">
-                    <label for="full_name">Full Name</label>
-                    <input type="text" id="full_name" name="full_name" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required>
+                    <label for="email">University Email Address</label>
+                    <input type="email" id="email" name="email" value="{{ email }}" required>
                 </div>
 
                 <div class="form-group">
@@ -96,6 +94,12 @@
                         <label for="buddy">Buddy</label>
                     </div>
                 </div>
+
+                {% if email and not show_buddy_option %}
+                <div class="buddy-eligibility-note">
+                    Note: Only students in their second year or higher can register as buddies.
+                </div>
+                {% endif %}
 
                 <button type="submit" class="btn">Register</button>
                 <p style="margin-top: 20px;">Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>

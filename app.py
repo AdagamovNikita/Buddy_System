@@ -269,7 +269,7 @@ def login():
                 return redirect(url_for("login"))
             
             flash(f"Welcome back, {user['full_name']}!", "success")
-            return redirect(url_for(f"{user['role']}_dashboard"))
+            return redirect(url_for("index"))
         else:
             conn.close()
             flash("Invalid email or password", "error")

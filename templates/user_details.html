@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Details - University Buddy System</title>
+    <link href="{{ url_for('static', filename='background.css') }}" rel="stylesheet">
+    <style>
+        .user-details-container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 30px;
+        }
+        .detail-row {
+            display: flex;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-label {
+            font-weight: bold;
+            width: 200px;
+        }
+        .action-buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-navbar">
+        <div class="navbar">
+            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+            <a href="#">Users</a>
+            <a href="#">Matches</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        <h1 class="header-title">User Details</h1>
+    </div>
+
+    <div class="container">
+        <div class="main-content user-details-container">
+            <h2>{{ user.full_name }}</h2>
+            
+            <div class="detail-row">
+                <div class="detail-label">Email:</div>
+                <div>{{ user.email }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Role:</div>
+                <div>{{ user.role }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Student ID:</div>
+                <div>{{ details.student_id_number if details else 'N/A' }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Age:</div>
+                <div>{{ details.age if details else 'N/A' }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Gender:</div>
+                <div>{{ details.gender if details else 'N/A' }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Major:</div>
+                <div>{{ details.major if details else 'N/A' }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Academic Year:</div>
+                <div>{{ details.academic_year if details else 'N/A' }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Nationality:</div>
+                <div>{{ details.nationality if details and details.nationality else 'N/A' }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Languages:</div>
+                <div>{{ details.languages if details and details.languages else 'N/A' }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Bio:</div>
+                <div>{{ details.bio if details and details.bio else 'N/A' }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Phone:</div>
+                <div>{{ details.phone_number if details and details.phone_number else 'N/A' }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Interests:</div>
+                <div>
+                    {% if details and details.interests %}
+                        {{ details.interests }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="{{ url_for('approve_user', user_id=user.id) }}" class="btn approve-btn">Approve</a>
+                <a href="{{ url_for('reject_user', user_id=user.id) }}" class="btn reject-btn">Reject</a>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

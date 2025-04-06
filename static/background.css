@@ -105,3 +105,9 @@ body, html {
     margin-bottom: 10px;
     border-radius: 4px;
 }
+
+.flash-info {
+    background-color: #e8edf5;
+    color: #2e467d;
+    border: 1px solid #a5b1d6;
+}

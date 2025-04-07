@@ -33,12 +33,30 @@ DUMMY_STUDENT_DATA = [
     },
     {
         "full_name": "Ryan Dibeh",
-        "student_id": "100000019",
-        "age": 18,
+        "student_id": "100000013",
+        "age": 20,
         "gender": "male",
         "major": "Bachelor of Science in Psychology",
         "academic_year": 1,
         "email": "rad00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Marianne Moukashar",
+        "student_id": "100000027",
+        "age": 19,
+        "gender": "Female",
+        "major": "Bachelor of Science in Computer Science",
+        "academic_year": 3,
+        "email": "mam00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Adel Almuhtaseb",
+        "student_id": "100000163",
+        "age": 19,
+        "gender": "Male",
+        "major": "Bachelor of Science in Computer Science",
+        "academic_year": 4,
+        "email": "aua00@aubmed.ac.cy"
     }
 ]
 

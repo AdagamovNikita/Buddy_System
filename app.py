@@ -48,6 +48,15 @@ DUMMY_STUDENT_DATA = [
         "major": "Bachelor of Science in Computer Science",
         "academic_year": 3,
         "email": "mam00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Adel Almuhtaseb",
+        "student_id": "100000163",
+        "age": 19,
+        "gender": "Male",
+        "major": "Bachelor of Science in Computer Science",
+        "academic_year": 4,
+        "email": "aua00@aubmed.ac.cy"
     }
 ]
 

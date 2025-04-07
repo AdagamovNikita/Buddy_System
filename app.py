@@ -33,8 +33,8 @@ DUMMY_STUDENT_DATA = [
     },
     {
         "full_name": "Ryan Dibeh",
-        "student_id": "100000019",
-        "age": 18,
+        "student_id": "100000013",
+        "age": 20,
         "gender": "male",
         "major": "Bachelor of Science in Psychology",
         "academic_year": 1,

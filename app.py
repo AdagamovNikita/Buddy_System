@@ -39,6 +39,15 @@ DUMMY_STUDENT_DATA = [
         "major": "Bachelor of Science in Psychology",
         "academic_year": 1,
         "email": "rad00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Marianne Moukashar",
+        "student_id": "100000027",
+        "age": 19,
+        "gender": "Female",
+        "major": "Bachelor of Science in Computer Science",
+        "academic_year": 3,
+        "email": "mam00@aubmed.ac.cy"
     }
 ]
 

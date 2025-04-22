@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Profile - University Buddy System</title>
+    <link href="{{ url_for('static', filename='background.css') }}" rel="stylesheet">
+    <style>
+        .profile-container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="tel"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        input[type="tel"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .phone-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .country-code {
+            width: 120px;
+        }
+
+        .phone-number {
+            flex-grow: 1;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .required-field::after {
+            content: " *";
+            color: #871f2d;
+        }
+
+        .interests-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .interest-checkbox {
+            display: none;
+        }
+
+        .interest-btn {
+            padding: 8px 15px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .interest-checkbox:checked+.interest-btn {
+            background-color: #871f2d;
+            color: white;
+            border-color: #871f2d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header-navbar">
+        <div class="navbar">
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        <h1 class="header-title">Complete Your Profile</h1>
+    </div>
+
+    <div class="container">
+        <div class="main-content profile-container">
+            <h2>Tell Us About Yourself</h2>
+
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+            </div>
+            <div class="profile-info">
+                <h3>Your Basic Information</h3>
+                <p><strong>Name:</strong> {{ session['full_name'] }}</p>
+            </div>
+
+            <form action="{{ url_for('complete_profile') }}" method="POST">
+                <div class="form-group">
+                    <label for="nationality">Your Nationality</label>
+                    <input type="text" id="nationality" name="nationality">
+                </div>
+
+                <div class="form-group">
+                    <label>Your Interests (Select at least 3)</label>
+                    <div class="interests-container">
+                        {% for interest in interests %}
+                        <input type="checkbox" id="interest-{{ loop.index }}" name="interests" value="{{ interest }}"
+                            class="interest-checkbox">
+                        <label for="interest-{{ loop.index }}" class="interest-btn">{{ interest }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="languages">Languages You Speak</label>
+                    <input type="text" id="languages" name="languages" placeholder="English, Spanish, etc.">
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">Short Bio</label>
+                    <textarea id="bio" name="bio" placeholder="Tell us about yourself..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="phone_country_code" name="phone_country_code" style="width: 120px; padding: 10px;">
+                            <option value="">Country Code</option>
+                            {% for code, label in country_codes %}
+                            <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="tel" id="phone_number" name="phone_number" 
+                               pattern="[0-9]{6,15}" 
+                               title="Phone number should be 6-15 digits" 
+                               placeholder="1234567890" 
+                               style="flex-grow: 1;">
+                    </div>
+                    <small>Format: Country Code + Number (digits only)</small>
+                </div>
+
+                <button type="submit" class="btn">Complete Profile</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

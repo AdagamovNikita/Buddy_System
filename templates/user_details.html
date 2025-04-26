@@ -131,7 +131,13 @@
                 <div class="detail-label">Interests:</div>
                 <div class="detail-value">
                     {% if details and details.interests %}
-                        {{ details.interests }}
+                        <div class="interests-list">
+                            {% set interests_list = details.interests.split(',') %}
+                            {% for interest in interests_list %}
+                                <span class="interest-tag">{{ interest.strip() }}</span>
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </div>
                     {% else %}
                         N/A
                     {% endif %}

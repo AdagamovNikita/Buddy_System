@@ -12,6 +12,7 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+# ignore the majors for now. all of them say bachelor of science regardless of the major, this is just from the dummy data and is not an error with the database or
 DUMMY_STUDENT_DATA = [
     {
         "full_name": "Sam Al Khoury",

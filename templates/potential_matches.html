@@ -266,7 +266,11 @@
                     <div class="compatibility-score">{{ match.score }}% Match</div>
                     <div class="detail-row">
                         <div class="detail-label">Languages:</div>
-                        <div class="detail-value">{{ match.languages }}</div>
+                        <div class="detail-value">
+                            {% for language in match.languages.split(',') %}
+                                <span class="interest-tag">{{ language }}</span>
+                            {% endfor %}
+                        </div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">Year:</div>

@@ -6,43 +6,45 @@
     <title>Register - University Buddy System</title>
     <link href="{{ url_for('static', filename='background.css') }}" rel="stylesheet">
     <style>
-        .register-container {
+        .auth-container {
             max-width: 500px;
             margin: 50px auto;
-            padding: 30px;
         }
-        .form-group {
-            margin-bottom: 20px;
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
         }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+        
+        .auth-header h2 {
+            color: var(--aub-maroon);
         }
-        input[type="text"],
-        input[type="password"],
-        input[type="email"],
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
+        
         .radio-group {
-            margin: 15px 0;
+            margin: 20px 0;
         }
+        
         .radio-option {
             display: inline-block;
-            margin-right: 15px;
+            margin-right: 20px;
         }
-        .email-check-btn {
-            margin-top: 5px;
+        
+        .radio-option input {
+            margin-right: 8px;
         }
-        .buddy-eligibility-note {
-            color: #871f2d;
+        
+        .eligibility-note {
+            color: var(--aub-maroon);
             font-style: italic;
-            margin-top: 10px;
+            margin: 10px 0 20px;
+            padding: 10px;
+            background-color: rgba(135, 31, 45, 0.1);
+            border-radius: 4px;
+        }
+        
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -57,8 +59,10 @@
     </div>
 
     <div class="container">
-        <div class="main-content register-container">
-            <h2>Create an Account</h2>
+        <div class="card auth-container">
+            <div class="auth-header">
+                <h2>Create an Account</h2>
+            </div>
             
             <div class="flash-messages">
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -74,16 +78,16 @@
 
             <form action="{{ url_for('register') }}" method="POST">
                 <div class="form-group">
-                    <label for="email">University Email Address</label>
-                    <input type="email" id="email" name="email" value="{{ email }}" required>
+                    <label for="email" class="required-field">University Email Address</label>
+                    <input type="email" id="email" name="email" value="{{ email }}" class="form-control" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+                    <label for="password" class="required-field">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
                 </div>
 
-                <div class="form-group radio-group">
+                <div class="radio-group">
                     <label>I want to register as:</label>
                     <div class="radio-option">
                         <input type="radio" id="student" name="role" value="student" checked>
@@ -96,13 +100,16 @@
                 </div>
 
                 {% if email and not show_buddy_option %}
-                <div class="buddy-eligibility-note">
+                <div class="eligibility-note">
                     Note: Only students in their second year or higher can register as buddies.
                 </div>
                 {% endif %}
 
-                <button type="submit" class="btn">Register</button>
-                <p style="margin-top: 20px;">Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+                <button type="submit" class="btn" style="width: 100%; padding: 12px;">Register</button>
+                
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="{{ url_for('login') }}" class="text-link">Login here</a></p>
+                </div>
             </form>
         </div>
     </div>

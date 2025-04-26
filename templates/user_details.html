@@ -9,22 +9,53 @@
         .user-details-container {
             max-width: 800px;
             margin: 30px auto;
-            padding: 30px;
         }
-        .detail-row {
+        
+        .user-header {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--aub-gray);
+        }
+        
+        .user-name {
+            color: var(--aub-maroon);
+            margin: 0;
+        }
+        
+        .user-role {
+            background-color: var(--aub-maroon);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
             margin-bottom: 15px;
             padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--aub-gray);
         }
+        
         .detail-label {
-            font-weight: bold;
-            width: 200px;
+            font-weight: 500;
+            color: var(--aub-gray-dark);
         }
+        
+        .detail-value {
+            color: #333;
+        }
+        
         .action-buttons {
-            margin-top: 30px;
             display: flex;
+            justify-content: flex-start;
             gap: 15px;
+            margin-top: 30px;
         }
     </style>
 </head>
@@ -40,67 +71,65 @@
     </div>
 
     <div class="container">
-        <div class="main-content user-details-container">
-            <h2>{{ user.full_name }}</h2>
+        <div class="card user-details-container">
+            <div class="user-header">
+                <h2 class="user-name">{{ user.full_name }}</h2>
+                <span class="user-role">{{ user.role|capitalize }}</span>
+            </div>
             
-            <div class="detail-row">
+            <div class="detail-grid">
                 <div class="detail-label">Email:</div>
-                <div>{{ user.email }}</div>
+                <div class="detail-value">{{ user.email }}</div>
             </div>
             
-            <div class="detail-row">
-                <div class="detail-label">Role:</div>
-                <div>{{ user.role }}</div>
-            </div>
-            
-            <div class="detail-row">
+            <div class="detail-grid">
                 <div class="detail-label">Student ID:</div>
-                <div>{{ details.student_id_number if details else 'N/A' }}</div>
+                <div class="detail-value">{{ details.student_id_number if details else 'N/A' }}</div>
             </div>
             
-            <div class="detail-row">
+            <div class="detail-grid">
                 <div class="detail-label">Age:</div>
-                <div>{{ details.age if details else 'N/A' }}</div>
+                <div class="detail-value">{{ details.age if details else 'N/A' }}</div>
             </div>
             
-            <div class="detail-row">
+            <div class="detail-grid">
                 <div class="detail-label">Gender:</div>
-                <div>{{ details.gender if details else 'N/A' }}</div>
+                <div class="detail-value">{{ details.gender if details else 'N/A' }}</div>
             </div>
             
-            <div class="detail-row">
+            <div class="detail-grid">
                 <div class="detail-label">Major:</div>
-                <div>{{ details.major if details else 'N/A' }}</div>
+                <div class="detail-value">{{ details.major if details else 'N/A' }}</div>
             </div>
             
-            <div class="detail-row">
+            <div class="detail-grid">
                 <div class="detail-label">Academic Year:</div>
-                <div>{{ details.academic_year if details else 'N/A' }}</div>
+                <div class="detail-value">{{ details.academic_year if details else 'N/A' }}</div>
             </div>
             
-            <div class="detail-row">
+            <div class="detail-grid">
                 <div class="detail-label">Nationality:</div>
-                <div>{{ details.nationality if details and details.nationality else 'N/A' }}</div>
+                <div class="detail-value">{{ details.nationality if details and details.nationality else 'N/A' }}</div>
             </div>
 
-            <div class="detail-row">
+            <div class="detail-grid">
                 <div class="detail-label">Languages:</div>
-                <div>{{ details.languages if details and details.languages else 'N/A' }}</div>
+                <div class="detail-value">{{ details.languages if details and details.languages else 'N/A' }}</div>
             </div>
             
-            <div class="detail-row">
+            <div class="detail-grid">
                 <div class="detail-label">Bio:</div>
-                <div>{{ details.bio if details and details.bio else 'N/A' }}</div>
+                <div class="detail-value">{{ details.bio if details and details.bio else 'N/A' }}</div>
             </div>
             
-            <div class="detail-row">
+            <div class="detail-grid">
                 <div class="detail-label">Phone:</div>
-                <div>{{ details.phone_number if details and details.phone_number else 'N/A' }}</div>
+                <div class="detail-value">{{ details.phone_number if details and details.phone_number else 'N/A' }}</div>
             </div>
             
-            <div class="detail-row">
+            <div class="detail-grid">
                 <div class="detail-label">Interests:</div>
-                <div>
+                <div class="detail-value">
                     {% if details and details.interests %}
                         {{ details.interests }}
                     {% else %}
@@ -112,7 +141,7 @@
             <div class="action-buttons">
                 <a href="{{ url_for('approve_user', user_id=user.id) }}" class="btn approve-btn">Approve</a>
                 <a href="{{ url_for('reject_user', user_id=user.id) }}" class="btn reject-btn">Reject</a>
-                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back</a>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
             </div>
         </div>
     </div>

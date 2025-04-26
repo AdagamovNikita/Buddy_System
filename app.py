@@ -33,30 +33,201 @@ DUMMY_STUDENT_DATA = [
     },
     {
         "full_name": "Ryan Dibeh",
-        "student_id": "100000013",
-        "age": 20,
+        "student_id": "100000019",
+        "age": 18,
         "gender": "male",
         "major": "Bachelor of Science in Psychology",
         "academic_year": 1,
         "email": "rad00@aubmed.ac.cy"
     },
     {
-        "full_name": "Marianne Moukashar",
-        "student_id": "100000027",
-        "age": 19,
+        "full_name": "Layla Hammoud",
+        "student_id": "100000020",
+        "age": 20,
         "gender": "Female",
-        "major": "Bachelor of Science in Computer Science",
+        "major": "Bachelor of Science in Business",
         "academic_year": 3,
-        "email": "mam00@aubmed.ac.cy"
+        "email": "lha00@aubmed.ac.cy"
     },
     {
-        "full_name": "Adel Almuhtaseb",
-        "student_id": "100000163",
+        "full_name": "Karim Nasser",
+        "student_id": "100000021",
         "age": 19,
+        "gender": "Male",
+        "major": "Bachelor of Science in PPE",
+        "academic_year": 2,
+        "email": "kna00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Maya Farah",
+        "student_id": "100000022",
+        "age": 18,
+        "gender": "Female",
+        "major": "Bachelor of Science in Industrial Engineering",
+        "academic_year": 1,
+        "email": "mfa00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Ziad Abadi",
+        "student_id": "100000023",
+        "age": 21,
         "gender": "Male",
         "major": "Bachelor of Science in Computer Science",
         "academic_year": 4,
-        "email": "aua00@aubmed.ac.cy"
+        "email": "zab00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Nour El Din",
+        "student_id": "100000024",
+        "age": 20,
+        "gender": "Female",
+        "major": "Bachelor of Science in Psychology",
+        "academic_year": 3,
+        "email": "nel00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Tarek Mansour",
+        "student_id": "100000025",
+        "age": 19,
+        "gender": "Male",
+        "major": "Bachelor of Science in Business",
+        "academic_year": 2,
+        "email": "tma00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Hala Zaytoun",
+        "student_id": "100000026",
+        "age": 18,
+        "gender": "Female",
+        "major": "Bachelor of Science in PPE",
+        "academic_year": 1,
+        "email": "hza00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Fadi Jaber",
+        "student_id": "100000027",
+        "age": 22,
+        "gender": "Male",
+        "major": "Bachelor of Science in Industrial Engineering",
+        "academic_year": 4,
+        "email": "fja00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Rima Chahine",
+        "student_id": "100000028",
+        "age": 20,
+        "gender": "Female",
+        "major": "Bachelor of Science in Computer Science",
+        "academic_year": 3,
+        "email": "rch00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Ali Saad",
+        "student_id": "100000029",
+        "age": 19,
+        "gender": "Male",
+        "major": "Bachelor of Science in Psychology",
+        "academic_year": 2,
+        "email": "asa00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Yara Haddad",
+        "student_id": "100000030",
+        "age": 18,
+        "gender": "Female",
+        "major": "Bachelor of Science in Business",
+        "academic_year": 1,
+        "email": "yha00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Bassel Maroun",
+        "student_id": "100000031",
+        "age": 21,
+        "gender": "Male",
+        "major": "Bachelor of Science in PPE",
+        "academic_year": 4,
+        "email": "bma00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Dana Halabi",
+        "student_id": "100000032",
+        "age": 20,
+        "gender": "Female",
+        "major": "Bachelor of Science in Industrial Engineering",
+        "academic_year": 3,
+        "email": "dha00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Wissam Tannous",
+        "student_id": "100000033",
+        "age": 19,
+        "gender": "Male",
+        "major": "Bachelor of Science in Computer Science",
+        "academic_year": 2,
+        "email": "wta00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Leila Asmar",
+        "student_id": "100000034",
+        "age": 18,
+        "gender": "Female",
+        "major": "Bachelor of Science in Psychology",
+        "academic_year": 1,
+        "email": "las00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Jad Younes",
+        "student_id": "100000035",
+        "age": 22,
+        "gender": "Male",
+        "major": "Bachelor of Science in Business",
+        "academic_year": 4,
+        "email": "jyo00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Sara Makdisi",
+        "student_id": "100000036",
+        "age": 20,
+        "gender": "Female",
+        "major": "Bachelor of Science in PPE",
+        "academic_year": 3,
+        "email": "sma00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Rami Itani",
+        "student_id": "100000037",
+        "age": 19,
+        "gender": "Male",
+        "major": "Bachelor of Science in Industrial Engineering",
+        "academic_year": 2,
+        "email": "rit00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Lina Daher",
+        "student_id": "100000038",
+        "age": 18,
+        "gender": "Female",
+        "major": "Bachelor of Science in Computer Science",
+        "academic_year": 1,
+        "email": "lda00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Hadi Fakhry",
+        "student_id": "100000039",
+        "age": 21,
+        "gender": "Male",
+        "major": "Bachelor of Science in Psychology",
+        "academic_year": 4,
+        "email": "hfa00@aubmed.ac.cy"
+    },
+    {
+        "full_name": "Nadia Saliba",
+        "student_id": "100000040",
+        "age": 20,
+        "gender": "Female",
+        "major": "Bachelor of Science in Business",
+        "academic_year": 3,
+        "email": "nsa00@aubmed.ac.cy"
     }
 ]
 
@@ -248,6 +419,95 @@ ADMIN_CREDENTIALS = {
     'password': 'Admin'
 }
 
+def get_potential_buddies(student_id, major_filter=None, language_filter=None, year_filter=None, gender_filter=None):
+    conn = get_db_connection()
+    try:
+        student_details = conn.execute(
+            "SELECT * FROM user_details WHERE user_id = ?", (student_id,)
+        ).fetchone()
+        if not student_details:
+            return []
+        
+        query = """SELECT u.id, u.full_name, ud.* 
+            FROM users u
+            JOIN user_details ud ON u.id = ud.user_id
+            WHERE u.role = 'buddy' 
+            AND u.is_approved = 1
+            AND u.id NOT IN (
+                SELECT buddy_id FROM buddy_matches 
+                WHERE student_id = ? AND status IN ('active', 'pending')
+            )
+            AND u.id != ?"""
+        
+        params = [student_id, student_id]
+        
+        if gender_filter:
+            query += " AND LOWER(ud.gender) = LOWER(?)"
+            params.append(gender_filter)
+        if major_filter:
+            query += " AND ud.major = ?"
+            params.append(major_filter)
+        if year_filter:
+            query += " AND ud.academic_year = ?"
+            params.append(int(year_filter))
+            
+        potential_buddies = conn.execute(query, params).fetchall()
+        
+        if not potential_buddies:
+            return []
+        
+        scored_buddies = []
+        for buddy in potential_buddies:
+            score = 0
+            if student_details['major'] and buddy['major']:
+                if student_details['major'] == buddy['major']:
+                    score += 30
+            if student_details['languages'] and buddy['languages']:
+                student_langs = set(lang.strip().lower() for lang in student_details['languages'].split(','))
+                buddy_langs = set(lang.strip().lower() for lang in buddy['languages'].split(','))
+                common_langs = student_langs.intersection(buddy_langs)
+                if common_langs:
+                    score += min(20, len(common_langs) * 5)
+            if student_details['interests'] and buddy['interests']:
+                student_interests = set(i.strip().lower() for i in student_details['interests'].split(','))
+                buddy_interests = set(i.strip().lower() for i in buddy['interests'].split(','))
+                common_interests = student_interests.intersection(buddy_interests)
+                if common_interests:
+                    score += min(20, len(common_interests) * 4)
+            if student_details['academic_year'] and buddy['academic_year']:
+                year_diff = abs(student_details['academic_year'] - buddy['academic_year'])
+                if year_diff == 1:
+                    score += 10
+                elif year_diff == 2:
+                    score += 5
+            
+            if language_filter and buddy['languages']:
+                buddy_langs = [lang.strip().lower() for lang in buddy['languages'].split(',')]
+                if language_filter.lower() in buddy_langs:
+                    score += 15
+            
+            score = max(0, min(100, score))
+            scored_buddies.append({
+                'buddy_id': buddy['id'],
+                'name': buddy['full_name'],
+                'score': score,
+                'major': buddy['major'],
+                'languages': buddy['languages'],
+                'interests': buddy['interests'],
+                'academic_year': buddy['academic_year'],
+                'gender': buddy['gender'],
+                'age': buddy['age'],
+                'nationality': buddy['nationality']
+            })
+        
+        scored_buddies.sort(key=lambda x: x['score'], reverse=True)
+        return scored_buddies
+    except Exception as e:
+        print(f"Error finding potential buddies: {str(e)}")
+        return []
+    finally:
+        conn.close()
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -285,9 +545,7 @@ def login():
             if not user["is_approved"]:
                 flash("Your account is pending approval from the administrator", "warning")
                 return redirect(url_for("login"))
-            
-            flash(f"Welcome back, {user['full_name']}!", "success")
-            return redirect(url_for("index"))
+            return redirect(url_for(f"{user['role']}_dashboard"))
         else:
             conn.close()
             flash("Invalid email or password", "error")
@@ -430,6 +688,14 @@ def admin_dashboard():
             "SELECT * FROM users WHERE is_approved = 0"
         ).fetchall()
         
+        pending_matches = conn.execute(
+            """SELECT bm.*, u1.full_name as buddy_name, u2.full_name as student_name 
+            FROM buddy_matches bm
+            JOIN users u1 ON bm.buddy_id = u1.id
+            JOIN users u2 ON bm.student_id = u2.id
+            WHERE bm.status = 'pending'"""
+        ).fetchall()
+        
         recent_matches = conn.execute(
             """SELECT bm.*, u1.full_name as buddy_name, u2.full_name as student_name 
             FROM buddy_matches bm
@@ -445,6 +711,7 @@ def admin_dashboard():
         
         return render_template("admin_dashboard.html", 
                              pending_users=pending_users,
+                             pending_matches=pending_matches,
                              recent_matches=recent_matches,
                              stats={'total_users': total_users, 
                                    'active_matches': active_matches})
@@ -455,6 +722,7 @@ def admin_dashboard():
     finally:
         if 'conn' in locals():
             conn.close()
+
 
 @app.route("/admin/approve-user/<int:user_id>")
 def approve_user(user_id):
@@ -514,6 +782,340 @@ def user_details(user_id):
         return render_template("user_details.html", user=user, details=details)
     finally:
         conn.close()
+
+@app.route("/student/dashboard")
+def student_dashboard():
+    if "user_id" not in session or session["role"] != "student":
+        flash("Please login as a student to access this page", "warning")
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        user = conn.execute("SELECT is_approved FROM users WHERE id = ?", (session["user_id"],)).fetchone()
+        
+        if not user["is_approved"]:
+            flash("Your account is pending approval from the administrator", "warning")
+            return redirect(url_for("login"))
+        user_details = conn.execute(
+            "SELECT * FROM user_details WHERE user_id = ?", 
+            (session["user_id"],)
+        ).fetchone()
+
+        if not user_details:
+            flash("Please complete your profile first", "info")
+            return redirect(url_for("complete_profile"))
+
+        matches = conn.execute(
+            """SELECT bm.*, u.full_name as buddy_name 
+            FROM buddy_matches bm
+            JOIN users u ON bm.buddy_id = u.id
+            WHERE bm.student_id = ?""", 
+            (session["user_id"],)
+        ).fetchall()
+
+        pending_matches = conn.execute(
+            """SELECT bm.*, u.full_name as buddy_name 
+            FROM buddy_matches bm
+            JOIN users u ON bm.buddy_id = u.id
+            WHERE bm.student_id = ? AND bm.status = 'pending'""", 
+            (session["user_id"],)
+        ).fetchall()
+
+        events = conn.execute(
+            """SELECT * FROM events 
+            WHERE is_public = 1 AND start_time > datetime('now')
+            ORDER BY start_time LIMIT 5"""
+        ).fetchall()
+
+        return render_template("student_dashboard.html",
+                            full_name=session["full_name"],
+                            user_details=user_details,
+                            matches=matches,
+                            pending_matches=pending_matches,
+                            events=events)
+    finally:
+        conn.close()
+
+@app.route("/buddy/dashboard")
+def buddy_dashboard():
+    if "user_id" not in session or session["role"] != "buddy":
+        flash("Please login as a buddy to access this page", "warning")
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        user = conn.execute("SELECT is_approved FROM users WHERE id = ?", (session["user_id"],)).fetchone()
+        
+        if not user["is_approved"]:
+            flash("Your account is pending approval from the administrator", "warning")
+            return redirect(url_for("login"))
+        user_details = conn.execute(
+            "SELECT * FROM user_details WHERE user_id = ?", 
+            (session["user_id"],)
+        ).fetchone()
+
+        if not user_details:
+            flash("Please complete your profile first", "info")
+            return redirect(url_for("complete_profile"))
+
+        matches = conn.execute(
+            """SELECT bm.*, u.full_name as student_name 
+            FROM buddy_matches bm
+            JOIN users u ON bm.student_id = u.id
+            WHERE bm.buddy_id = ?""", 
+            (session["user_id"],)
+        ).fetchall()
+
+        pending_matches = conn.execute(
+            """SELECT bm.*, u.full_name as student_name 
+            FROM buddy_matches bm
+            JOIN users u ON bm.student_id = u.id
+            WHERE bm.buddy_id = ? AND bm.status = 'pending'""", 
+            (session["user_id"],)
+        ).fetchall()
+
+        sessions = conn.execute(
+            """SELECT ss.*, u.full_name as student_name 
+            FROM scheduled_sessions ss
+            JOIN buddy_matches bm ON ss.match_id = bm.id
+            JOIN users u ON bm.student_id = u.id
+            WHERE bm.buddy_id = ? AND ss.status = 'scheduled'
+            ORDER BY ss.scheduled_time LIMIT 5""", 
+            (session["user_id"],)
+        ).fetchall()
+        events = conn.execute(
+            """SELECT * FROM events 
+            WHERE is_public = 1 AND start_time > datetime('now')
+            ORDER BY start_time LIMIT 5"""
+        ).fetchall()
+
+        return render_template("buddy_dashboard.html",
+                            full_name=session["full_name"],
+                            user_details=user_details,
+                            matches=matches,
+                            pending_matches=pending_matches,
+                            sessions=sessions,
+                            events=events)
+    finally:
+        conn.close()
+
+@app.route("/potential-matches")
+def view_potential_matches():
+    if "user_id" not in session or session["role"] != "student":
+        flash("Please login as a student to view matches", "warning")
+        return redirect(url_for("login"))
+    
+    major_filter = request.args.get("major", "")
+    language_filter = request.args.get("language", "")
+    year_filter = request.args.get("year", "")
+    gender_filter = request.args.get("gender", "")
+    matches = get_potential_buddies(
+        session["user_id"],
+        major_filter=major_filter if major_filter else None,
+        language_filter=language_filter if language_filter else None,
+        year_filter=year_filter if year_filter else None,
+        gender_filter=gender_filter if gender_filter else None
+    )
+    
+    return render_template("potential_matches.html", 
+                         matches=matches,
+                         full_name=session["full_name"])
+
+
+@app.route("/buddy-details/<int:buddy_id>")
+def buddy_details(buddy_id):
+    if "user_id" not in session or session["role"] != "student":
+        flash("Please login as a student to view buddy details", "warning")
+        return redirect(url_for("login"))
+    conn = get_db_connection()
+    try:
+        buddy = conn.execute(
+            """SELECT u.id as buddy_id, u.full_name as name, ud.* 
+            FROM users u
+            JOIN user_details ud ON u.id = ud.user_id
+            WHERE u.id = ? AND u.role = 'buddy' AND u.is_approved = 1""",
+            (buddy_id,)
+        ).fetchone()
+        if not buddy:
+            flash("Buddy not found", "error")
+            return redirect(url_for("view_potential_matches"))
+        return render_template("buddy_details.html",
+                            buddy=buddy,
+                            full_name=session["full_name"])
+    finally:
+        conn.close()
+
+@app.route("/request-match/<int:buddy_id>", methods=["POST"])
+def request_match(buddy_id):
+    if "user_id" not in session or session["role"] != "student":
+        flash("Unauthorized", "error")
+        return redirect(url_for("login"))
+    
+    conn = get_db_connection()
+    try:
+        buddy = conn.execute(
+            "SELECT id, full_name FROM users WHERE id = ? AND role = 'buddy' AND is_approved = 1", 
+            (buddy_id,)
+        ).fetchone()
+        
+        if not buddy:
+            flash("Buddy not available for matching", "error")
+            return redirect(url_for("view_potential_matches"))
+        
+        existing_student_match = conn.execute(
+            "SELECT 1 FROM buddy_matches WHERE student_id = ? AND status = 'active'", 
+            (session["user_id"],)
+        ).fetchone()
+        
+        if existing_student_match:
+            flash("You already have an active buddy", "info")
+            return redirect(url_for("view_potential_matches"))
+        
+        buddy_matches_count = conn.execute(
+            "SELECT COUNT(*) FROM buddy_matches WHERE buddy_id = ? AND status = 'active'", 
+            (buddy_id,)
+        ).fetchone()[0]
+        
+        if buddy_matches_count >= 3:
+            flash("This buddy already has 3 students", "info")
+            return redirect(url_for("view_potential_matches"))
+        
+        existing_match = conn.execute(
+            "SELECT 1 FROM buddy_matches WHERE student_id = ? AND buddy_id = ?", 
+            (session["user_id"], buddy_id)
+        ).fetchone()
+        
+        if existing_match:
+            flash("You already have a match request with this buddy", "info")
+            return redirect(url_for("view_potential_matches"))
+        
+        conn.execute(
+            """INSERT INTO buddy_matches 
+            (buddy_id, student_id, status, match_score) 
+            VALUES (?, ?, 'pending', 
+                (SELECT score FROM (
+                    SELECT buddy_id, score 
+                    FROM potential_matches_view 
+                    WHERE student_id = ? AND buddy_id = ?
+                ))
+            )""",
+            (buddy_id, session["user_id"], session["user_id"], buddy_id))
+        conn.commit()
+        
+        student_name = session["full_name"]
+        conn.execute(
+            """INSERT INTO notifications 
+            (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
+            VALUES (?, ?, ?, ?, ?, ?)""",
+            (buddy_id, 
+             "New Match Request", 
+             f"{student_name} wants to connect with you!",
+             "match_request",
+             "buddy_match",
+             conn.execute("SELECT last_insert_rowid()").fetchone()[0]))
+        conn.commit()
+
+        conn.execute(
+            """INSERT INTO notifications 
+            (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
+            VALUES (?, ?, ?, ?, ?, ?)""",
+            ("admin", 
+             "New Match Request", 
+             f"{student_name} wants to connect with buddy {buddy['full_name']}",
+             "match_request",
+             "buddy_match",
+             conn.execute("SELECT last_insert_rowid()").fetchone()[0]))
+        conn.commit()
+        
+        flash(f"Match request sent to {buddy['full_name']}!", "success")
+        return redirect(url_for("view_potential_matches"))
+        
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error requesting match: {str(e)}", "error")
+        return redirect(url_for("view_potential_matches"))
+    finally:
+        conn.close()
+
+@app.route("/approve-match/<int:match_id>")
+def approve_match(match_id):
+    if not session.get("is_admin"):
+        flash("Unauthorized access", "error")
+        return redirect(url_for("login"))
+    
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            "UPDATE buddy_matches SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = ?", 
+            (match_id,)
+        )
+        conn.commit()
+        
+        match = conn.execute(
+            "SELECT bm.student_id, u.full_name AS student_name FROM buddy_matches bm JOIN users u ON bm.student_id = u.id WHERE bm.id = ?", 
+            (match_id,)
+        ).fetchone()
+        
+        conn.execute(
+            """INSERT INTO notifications 
+            (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
+            VALUES (?, ?, ?, ?, ?, ?)""",
+            (match['student_id'], 
+             "Match Approved", 
+             f"Your match with {match['student_name']} has been approved!",
+             "match_approved",
+             "buddy_match",
+             match_id))
+        conn.commit()
+        
+        flash("Match approved successfully", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error approving match: {str(e)}", "error")
+    finally:
+        conn.close()
+    
+    return redirect(url_for("admin_dashboard"))
+
+@app.route("/reject-match/<int:match_id>")
+def reject_match(match_id):
+    if not session.get("is_admin"):
+        flash("Unauthorized access", "error")
+        return redirect(url_for("login"))
+    
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            "UPDATE buddy_matches SET status = 'declined', updated_at = CURRENT_TIMESTAMP WHERE id = ?", 
+            (match_id,)
+        )
+        conn.commit()
+        
+        match = conn.execute(
+            "SELECT bm.student_id, u.full_name AS student_name FROM buddy_matches bm JOIN users u ON bm.student_id = u.id WHERE bm.id = ?", 
+            (match_id,)
+        ).fetchone()
+        
+        conn.execute(
+            """INSERT INTO notifications 
+            (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
+            VALUES (?, ?, ?, ?, ?, ?)""",
+            (match['student_id'], 
+             "Match Rejected", 
+             f"Your match with {match['student_name']} has been rejected.",
+             "match_rejected",
+             "buddy_match",
+             match_id))
+        conn.commit()
+        
+        flash("Match rejected successfully", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error rejecting match: {str(e)}", "error")
+    finally:
+        conn.close()
+    
+    return redirect(url_for("admin_dashboard"))
 
 if __name__ == "__main__":
     if not os.path.exists("buddy_system.db"):

@@ -130,7 +130,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="right-column">
                 <div class="matches-card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -160,7 +160,7 @@
                     {% for event in events %}
                     <div class="event-card">
                         <h4>{{ event.title }}</h4>
-                        <p>{{ event.start_time }} - {{ event.event_type }}</p>
+                        <p>{{ event.formatted_start_time }} - {{ event.event_type }}</p>
                     </div>
                     {% endfor %}
                     {% else %}
@@ -174,19 +174,19 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Buddy ID</th>
                             <th>Buddy Name</th>
                             <th>Requested On</th>
+                            <th>Match Score</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for match in pending_matches %}
                         <tr>
-                            <td>{{ match.buddy_id }}</td>
                             <td>{{ match.buddy_name }}</td>
-                            <td>{{ match.created_at }}</td>
-                            <td>Pending</td>
+                            <td>{{ match.formatted_created_at }}</td>
+                            <td>{{ match.match_score }}%</td>
+                            <td>Pending Approval</td>
                         </tr>
                         {% endfor %}
                     </tbody>

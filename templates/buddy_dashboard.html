@@ -117,23 +117,25 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Student ID</th>
                             <th>Student Name</th>
                             <th>Requested On</th>
+                            <th>Match Score</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for match in pending_matches %}
                         <tr>
-                            <td>{{ match.student_id }}</td>
                             <td>{{ match.student_name }}</td>
-                            <td>{{ match.created_at }}</td>
+                            <td>{{ match.formatted_created_at }}</td>
+                            <td>{{ match.match_score }}%</td>
                             <td>
-                                <a href="{{ url_for('approve_match', match_id=match.id) }}"
-                                    class="action-btn details-btn">Approve</a>
-                                <a href="{{ url_for('reject_match', match_id=match.id) }}"
-                                    class="action-btn reject-btn">Reject</a>
+                                <form action="{{ url_for('approve_match', match_id=match.id) }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="action-btn details-btn">Approve</button>
+                                </form>
+                                <form action="{{ url_for('reject_match', match_id=match.id) }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="action-btn reject-btn">Reject</button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
@@ -171,7 +173,7 @@
                         <div class="session-pic">{{ session.student_name[0] }}</div>
                         <div>
                             <h4>{{ session.student_name }}</h4>
-                            <p>{{ session.scheduled_time }} - {{ session.session_type }}</p>
+                            <p>{{ session.formatted_scheduled_time }} - {{ session.session_type }}</p>
                         </div>
                     </div>
                     {% endfor %}
@@ -185,7 +187,7 @@
                     {% for event in events %}
                     <div class="event-card">
                         <h4>{{ event.title }}</h4>
-                        <p>{{ event.start_time }} - {{ event.event_type }}</p>
+                        <p>{{ event.formatted_start_time }} - {{ event.event_type }}</p>
                     </div>
                     {% endfor %}
                     {% else %}

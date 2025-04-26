@@ -796,6 +796,7 @@ def student_dashboard():
         if not user["is_approved"]:
             flash("Your account is pending approval from the administrator", "warning")
             return redirect(url_for("login"))
+        
         user_details = conn.execute(
             "SELECT * FROM user_details WHERE user_id = ?", 
             (session["user_id"],)
@@ -806,25 +807,28 @@ def student_dashboard():
             return redirect(url_for("complete_profile"))
 
         matches = conn.execute(
-            """SELECT bm.*, u.full_name as buddy_name 
-            FROM buddy_matches bm
-            JOIN users u ON bm.buddy_id = u.id
-            WHERE bm.student_id = ?""", 
+            """SELECT bm.*, u.full_name as buddy_name, 
+               datetime(bm.created_at) as formatted_created_at
+               FROM buddy_matches bm
+               JOIN users u ON bm.buddy_id = u.id
+               WHERE bm.student_id = ?""", 
             (session["user_id"],)
         ).fetchall()
 
         pending_matches = conn.execute(
-            """SELECT bm.*, u.full_name as buddy_name 
-            FROM buddy_matches bm
-            JOIN users u ON bm.buddy_id = u.id
-            WHERE bm.student_id = ? AND bm.status = 'pending'""", 
+            """SELECT bm.*, u.full_name as buddy_name, 
+               datetime(bm.created_at) as formatted_created_at
+               FROM buddy_matches bm
+               JOIN users u ON bm.buddy_id = u.id
+               WHERE bm.student_id = ? AND bm.status = 'pending'""", 
             (session["user_id"],)
         ).fetchall()
 
         events = conn.execute(
-            """SELECT * FROM events 
-            WHERE is_public = 1 AND start_time > datetime('now')
-            ORDER BY start_time LIMIT 5"""
+            """SELECT *, datetime(start_time) as formatted_start_time 
+               FROM events 
+               WHERE is_public = 1 AND start_time > datetime('now')
+               ORDER BY start_time LIMIT 5"""
         ).fetchall()
 
         return render_template("student_dashboard.html",
@@ -849,6 +853,7 @@ def buddy_dashboard():
         if not user["is_approved"]:
             flash("Your account is pending approval from the administrator", "warning")
             return redirect(url_for("login"))
+        
         user_details = conn.execute(
             "SELECT * FROM user_details WHERE user_id = ?", 
             (session["user_id"],)
@@ -859,34 +864,39 @@ def buddy_dashboard():
             return redirect(url_for("complete_profile"))
 
         matches = conn.execute(
-            """SELECT bm.*, u.full_name as student_name 
-            FROM buddy_matches bm
-            JOIN users u ON bm.student_id = u.id
-            WHERE bm.buddy_id = ?""", 
+            """SELECT bm.*, u.full_name as student_name, 
+               datetime(bm.created_at) as formatted_created_at
+               FROM buddy_matches bm
+               JOIN users u ON bm.student_id = u.id
+               WHERE bm.buddy_id = ?""", 
             (session["user_id"],)
         ).fetchall()
 
         pending_matches = conn.execute(
-            """SELECT bm.*, u.full_name as student_name 
-            FROM buddy_matches bm
-            JOIN users u ON bm.student_id = u.id
-            WHERE bm.buddy_id = ? AND bm.status = 'pending'""", 
+            """SELECT bm.*, u.full_name as student_name, 
+               datetime(bm.created_at) as formatted_created_at
+               FROM buddy_matches bm
+               JOIN users u ON bm.student_id = u.id
+               WHERE bm.buddy_id = ? AND bm.status = 'pending'""", 
             (session["user_id"],)
         ).fetchall()
 
         sessions = conn.execute(
-            """SELECT ss.*, u.full_name as student_name 
-            FROM scheduled_sessions ss
-            JOIN buddy_matches bm ON ss.match_id = bm.id
-            JOIN users u ON bm.student_id = u.id
-            WHERE bm.buddy_id = ? AND ss.status = 'scheduled'
-            ORDER BY ss.scheduled_time LIMIT 5""", 
+            """SELECT ss.*, u.full_name as student_name, 
+               datetime(ss.scheduled_time) as formatted_scheduled_time
+               FROM scheduled_sessions ss
+               JOIN buddy_matches bm ON ss.match_id = bm.id
+               JOIN users u ON bm.student_id = u.id
+               WHERE bm.buddy_id = ? AND ss.status = 'scheduled'
+               ORDER BY ss.scheduled_time LIMIT 5""", 
             (session["user_id"],)
         ).fetchall()
+        
         events = conn.execute(
-            """SELECT * FROM events 
-            WHERE is_public = 1 AND start_time > datetime('now')
-            ORDER BY start_time LIMIT 5"""
+            """SELECT *, datetime(start_time) as formatted_start_time 
+               FROM events 
+               WHERE is_public = 1 AND start_time > datetime('now')
+               ORDER BY start_time LIMIT 5"""
         ).fetchall()
 
         return render_template("buddy_dashboard.html",
@@ -927,6 +937,7 @@ def buddy_details(buddy_id):
     if "user_id" not in session or session["role"] != "student":
         flash("Please login as a student to view buddy details", "warning")
         return redirect(url_for("login"))
+    
     conn = get_db_connection()
     try:
         buddy = conn.execute(
@@ -936,12 +947,45 @@ def buddy_details(buddy_id):
             WHERE u.id = ? AND u.role = 'buddy' AND u.is_approved = 1""",
             (buddy_id,)
         ).fetchone()
+        
         if not buddy:
             flash("Buddy not found", "error")
             return redirect(url_for("view_potential_matches"))
+        
+        # Calculate match score
+        student_details = conn.execute(
+            "SELECT * FROM user_details WHERE user_id = ?", 
+            (session["user_id"],)
+        ).fetchone()
+        
+        match_score = 0
+        if student_details:
+            if student_details['major'] and buddy['major']:
+                if student_details['major'] == buddy['major']:
+                    match_score += 30
+            if student_details['languages'] and buddy['languages']:
+                student_langs = set(lang.strip().lower() for lang in student_details['languages'].split(','))
+                buddy_langs = set(lang.strip().lower() for lang in buddy['languages'].split(','))
+                common_langs = student_langs.intersection(buddy_langs)
+                if common_langs:
+                    match_score += min(20, len(common_langs) * 5)
+            if student_details['interests'] and buddy['interests']:
+                student_interests = set(i.strip().lower() for i in student_details['interests'].split(','))
+                buddy_interests = set(i.strip().lower() for i in buddy['interests'].split(','))
+                common_interests = student_interests.intersection(buddy_interests)
+                if common_interests:
+                    match_score += min(20, len(common_interests) * 4)
+            if student_details['academic_year'] and buddy['academic_year']:
+                year_diff = abs(student_details['academic_year'] - buddy['academic_year'])
+                if year_diff == 1:
+                    match_score += 10
+                elif year_diff == 2:
+                    match_score += 5
+        
         return render_template("buddy_details.html",
                             buddy=buddy,
-                            full_name=session["full_name"])
+                            full_name=session["full_name"],
+                            match_score=match_score)
     finally:
         conn.close()
 
@@ -953,78 +997,109 @@ def request_match(buddy_id):
     
     conn = get_db_connection()
     try:
-        buddy = conn.execute(
-            "SELECT id, full_name FROM users WHERE id = ? AND role = 'buddy' AND is_approved = 1", 
-            (buddy_id,)
-        ).fetchone()
-        
-        if not buddy:
-            flash("Buddy not available for matching", "error")
-            return redirect(url_for("view_potential_matches"))
-        
-        existing_student_match = conn.execute(
+        # Check if student already has an active buddy
+        active_match = conn.execute(
             "SELECT 1 FROM buddy_matches WHERE student_id = ? AND status = 'active'", 
             (session["user_id"],)
         ).fetchone()
         
-        if existing_student_match:
+        if active_match:
             flash("You already have an active buddy", "info")
             return redirect(url_for("view_potential_matches"))
         
-        buddy_matches_count = conn.execute(
+        # Check if there's already a pending request with this buddy
+        existing_request = conn.execute(
+            "SELECT 1 FROM buddy_matches WHERE student_id = ? AND buddy_id = ? AND status = 'pending'", 
+            (session["user_id"], buddy_id)
+        ).fetchone()
+        
+        if existing_request:
+            flash("You already have a pending request with this buddy", "info")
+            return redirect(url_for("view_potential_matches"))
+        
+        # Check if buddy has reached maximum students (3)
+        buddy_active_matches = conn.execute(
             "SELECT COUNT(*) FROM buddy_matches WHERE buddy_id = ? AND status = 'active'", 
             (buddy_id,)
         ).fetchone()[0]
         
-        if buddy_matches_count >= 3:
-            flash("This buddy already has 3 students", "info")
+        if buddy_active_matches >= 3:
+            flash("This buddy has reached the maximum number of students", "info")
             return redirect(url_for("view_potential_matches"))
         
-        existing_match = conn.execute(
-            "SELECT 1 FROM buddy_matches WHERE student_id = ? AND buddy_id = ?", 
-            (session["user_id"], buddy_id)
+        # Calculate match score (same as in buddy_details)
+        student_details = conn.execute(
+            "SELECT * FROM user_details WHERE user_id = ?", 
+            (session["user_id"],)
+        ).fetchone()
+        buddy_details = conn.execute(
+            "SELECT * FROM user_details WHERE user_id = ?", 
+            (buddy_id,)
         ).fetchone()
         
-        if existing_match:
-            flash("You already have a match request with this buddy", "info")
-            return redirect(url_for("view_potential_matches"))
+        match_score = 0
+        if student_details and buddy_details:
+            if student_details['major'] and buddy_details['major']:
+                if student_details['major'] == buddy_details['major']:
+                    match_score += 30
+            if student_details['languages'] and buddy_details['languages']:
+                student_langs = set(lang.strip().lower() for lang in student_details['languages'].split(','))
+                buddy_langs = set(lang.strip().lower() for lang in buddy_details['languages'].split(','))
+                common_langs = student_langs.intersection(buddy_langs)
+                if common_langs:
+                    match_score += min(20, len(common_langs) * 5)
+            if student_details['interests'] and buddy_details['interests']:
+                student_interests = set(i.strip().lower() for i in student_details['interests'].split(','))
+                buddy_interests = set(i.strip().lower() for i in buddy_details['interests'].split(','))
+                common_interests = student_interests.intersection(buddy_interests)
+                if common_interests:
+                    match_score += min(20, len(common_interests) * 4)
+            if student_details['academic_year'] and buddy_details['academic_year']:
+                year_diff = abs(student_details['academic_year'] - buddy_details['academic_year'])
+                if year_diff == 1:
+                    match_score += 10
+                elif year_diff == 2:
+                    match_score += 5
         
+        # Create the match request
         conn.execute(
             """INSERT INTO buddy_matches 
-            (buddy_id, student_id, status, match_score) 
-            VALUES (?, ?, 'pending', 
-                (SELECT score FROM (
-                    SELECT buddy_id, score 
-                    FROM potential_matches_view 
-                    WHERE student_id = ? AND buddy_id = ?
-                ))
-            )""",
-            (buddy_id, session["user_id"], session["user_id"], buddy_id))
+            (buddy_id, student_id, status, match_score, created_at) 
+            VALUES (?, ?, 'pending', ?, datetime('now'))""",
+            (buddy_id, session["user_id"], match_score)
+        )
         conn.commit()
         
-        student_name = session["full_name"]
+        # Get buddy name for notification
+        buddy = conn.execute(
+            "SELECT full_name FROM users WHERE id = ?", 
+            (buddy_id,)
+        ).fetchone()
+        
+        # Create notification for buddy
         conn.execute(
             """INSERT INTO notifications 
             (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
             VALUES (?, ?, ?, ?, ?, ?)""",
             (buddy_id, 
              "New Match Request", 
-             f"{student_name} wants to connect with you!",
+             f"{session['full_name']} wants to connect with you!",
              "match_request",
              "buddy_match",
              conn.execute("SELECT last_insert_rowid()").fetchone()[0]))
-        conn.commit()
-
+        
+        # Create notification for admin
         conn.execute(
             """INSERT INTO notifications 
             (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
             VALUES (?, ?, ?, ?, ?, ?)""",
             ("admin", 
              "New Match Request", 
-             f"{student_name} wants to connect with buddy {buddy['full_name']}",
+             f"{session['full_name']} wants to connect with buddy {buddy['full_name']}",
              "match_request",
              "buddy_match",
              conn.execute("SELECT last_insert_rowid()").fetchone()[0]))
+        
         conn.commit()
         
         flash(f"Match request sent to {buddy['full_name']}!", "success")
@@ -1037,85 +1112,112 @@ def request_match(buddy_id):
     finally:
         conn.close()
 
-@app.route("/approve-match/<int:match_id>")
+@app.route("/approve-match/<int:match_id>", methods=["POST"])
 def approve_match(match_id):
-    if not session.get("is_admin"):
+    if "user_id" not in session or session["role"] != "buddy":
         flash("Unauthorized access", "error")
         return redirect(url_for("login"))
     
     conn = get_db_connection()
     try:
-        conn.execute(
-            "UPDATE buddy_matches SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = ?", 
-            (match_id,)
-        )
-        conn.commit()
-        
+        # First check if buddy already has 3 active matches
         match = conn.execute(
-            "SELECT bm.student_id, u.full_name AS student_name FROM buddy_matches bm JOIN users u ON bm.student_id = u.id WHERE bm.id = ?", 
+            "SELECT buddy_id FROM buddy_matches WHERE id = ?", 
             (match_id,)
         ).fetchone()
         
+        if not match:
+            flash("Match not found", "error")
+            return redirect(url_for("buddy_dashboard"))
+        
+        active_matches = conn.execute(
+            "SELECT COUNT(*) FROM buddy_matches WHERE buddy_id = ? AND status = 'active'", 
+            (match['buddy_id'],)
+        ).fetchone()[0]
+        
+        if active_matches >= 3:
+            flash("You already have 3 active students. Cannot accept more.", "error")
+            return redirect(url_for("buddy_dashboard"))
+        
+        # Approve the match
+        conn.execute(
+            "UPDATE buddy_matches SET status = 'active', updated_at = datetime('now') WHERE id = ?", 
+            (match_id,)
+        )
+        
+        # Get student details for notification
+        student = conn.execute(
+            "SELECT student_id, full_name FROM users WHERE id = (SELECT student_id FROM buddy_matches WHERE id = ?)", 
+            (match_id,)
+        ).fetchone()
+        
+        # Create notification for student
         conn.execute(
             """INSERT INTO notifications 
             (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
             VALUES (?, ?, ?, ?, ?, ?)""",
-            (match['student_id'], 
+            (student['student_id'], 
              "Match Approved", 
-             f"Your match with {match['student_name']} has been approved!",
+             f"Your match request has been approved!",
              "match_approved",
              "buddy_match",
              match_id))
+        
         conn.commit()
         
         flash("Match approved successfully", "success")
+        return redirect(url_for("buddy_dashboard"))
+        
     except Exception as e:
         conn.rollback()
         flash(f"Error approving match: {str(e)}", "error")
+        return redirect(url_for("buddy_dashboard"))
     finally:
         conn.close()
-    
-    return redirect(url_for("admin_dashboard"))
 
-@app.route("/reject-match/<int:match_id>")
+@app.route("/reject-match/<int:match_id>", methods=["POST"])
 def reject_match(match_id):
-    if not session.get("is_admin"):
+    if "user_id" not in session or session["role"] != "buddy":
         flash("Unauthorized access", "error")
         return redirect(url_for("login"))
     
     conn = get_db_connection()
     try:
+        # Update match status to declined
         conn.execute(
-            "UPDATE buddy_matches SET status = 'declined', updated_at = CURRENT_TIMESTAMP WHERE id = ?", 
+            "UPDATE buddy_matches SET status = 'declined', updated_at = datetime('now') WHERE id = ?", 
             (match_id,)
         )
-        conn.commit()
         
-        match = conn.execute(
-            "SELECT bm.student_id, u.full_name AS student_name FROM buddy_matches bm JOIN users u ON bm.student_id = u.id WHERE bm.id = ?", 
+        # Get student details for notification
+        student = conn.execute(
+            "SELECT student_id FROM buddy_matches WHERE id = ?", 
             (match_id,)
         ).fetchone()
         
+        # Create notification for student
         conn.execute(
             """INSERT INTO notifications 
             (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
             VALUES (?, ?, ?, ?, ?, ?)""",
-            (match['student_id'], 
-             "Match Rejected", 
-             f"Your match with {match['student_name']} has been rejected.",
-             "match_rejected",
+            (student['student_id'], 
+             "Match Declined", 
+             "Your match request has been declined",
+             "match_declined",
              "buddy_match",
              match_id))
+        
         conn.commit()
         
-        flash("Match rejected successfully", "success")
+        flash("Match declined successfully", "success")
+        return redirect(url_for("buddy_dashboard"))
+        
     except Exception as e:
         conn.rollback()
-        flash(f"Error rejecting match: {str(e)}", "error")
+        flash(f"Error declining match: {str(e)}", "error")
+        return redirect(url_for("buddy_dashboard"))
     finally:
         conn.close()
-    
-    return redirect(url_for("admin_dashboard"))
 
 if __name__ == "__main__":
     if not os.path.exists("buddy_system.db"):

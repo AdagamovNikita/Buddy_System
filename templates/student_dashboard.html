@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -70,11 +69,19 @@
         }
 
         .match-pic {
+            .match-pic {
             width: 50px;
             height: 50px;
+            background-color: #ccc;
             border-radius: 50%;
-            background-color: #ddd;
-            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-right: +15px;
+            color: rgb(133, 0, 0);
+        }
         }
 
         .select-buddy-btn {
@@ -90,6 +97,152 @@
 
         .select-buddy-btn:hover {
             background-color: #6a1825;
+        }
+
+        .message-buddy-btn {
+            background-color: #2d873f;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        /* CHAT SYSTEM STYLES */
+        .chat-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #871f2d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .chat-window {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 450px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .chat-header {
+            background-color: #871f2d;
+            color: white;
+            padding: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-buddy-selector {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .chat-buddy-selector select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .your-message {
+            background-color: #e3f2fd;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .buddy-message {
+            background-color: #f1f1f1;
+            margin-right: auto;
+        }
+
+        .message-time {
+            font-size: 0.7em;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .message-status {
+            font-size: 0.7em;
+            font-style: italic;
+        }
+
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .chat-input button {
+            background-color: #871f2d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        .no-chat-selected {
+            padding: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-window {
+                width: 280px;
+                height: 400px;
+                right: 10px;
+            }
         }
     </style>
 </head>
@@ -120,11 +273,11 @@
                         <h4>My Interests</h4>
                         <div class="interests-list">
                             {% if user_details and user_details.interests %}
-                            {% for interest in user_details.interests.split(',') %}
-                            <span class="interest-tag">{{ interest }}</span>
-                            {% endfor %}
+                                {% for interest in user_details.interests.split(',') %}
+                                <span class="interest-tag">{{ interest }}</span>
+                                {% endfor %}
                             {% else %}
-                            <p>No interests specified</p>
+                                <p>No interests specified</p>
                             {% endif %}
                         </div>
                     </div>
@@ -138,67 +291,336 @@
                         <a href="{{ url_for('view_potential_matches') }}" class="select-buddy-btn">Select Buddy</a>
                     </div>
                     {% if matches %}
-                    {% for match in matches %}
-                    <div class="match-card">
-                        <div class="match-info">
-                            <div class="match-pic">{{ match.buddy_name[0] }}</div>
-                            <div>
-                                <h4>{{ match.buddy_name }}</h4>
-                                <p>Status: {{ match.status }}</p>
+                        {% for match in matches %}
+                        <div class="match-card">
+                            <div class="match-info">
+                                <div class="match-pic">{{ match.buddy_name[0] }}</div>
+                                <div>
+                                    <h4>{{ match.buddy_name }}</h4>
+                                    <p>Status: {{ match.status }}</p>
+                                </div>
                             </div>
+                            {% if match.status == 'approved' %}
+                            <button class="message-buddy-btn" onclick="openChatWithBuddy('{{ match.buddy_id }}', '{{ match.buddy_name }}')">
+                                Message
+                            </button>
+                            {% endif %}
                         </div>
-                    </div>
-                    {% endfor %}
+                        {% endfor %}
                     {% else %}
-                    <p>You don't have any matches yet.</p>
+                        <p>You don't have any matches yet.</p>
                     {% endif %}
                 </div>
 
                 <div class="events-card">
                     <h2>Upcoming Events</h2>
                     {% if events %}
-                    {% for event in events %}
-                    <div class="event-card">
-                        <h4>{{ event.title }}</h4>
-                        <p>{{ event.formatted_start_time }} - {{ event.event_type }}</p>
-                    </div>
-                    {% endfor %}
+                        {% for event in events %}
+                        <div class="event-card">
+                            <h4>{{ event.title }}</h4>
+                            <p>{{ event.formatted_start_time }} - {{ event.event_type }}</p>
+                        </div>
+                        {% endfor %}
                     {% else %}
-                    <p>No upcoming events.</p>
+                        <p>No upcoming events.</p>
+                    {% endif %}
+                </div>
+
+                <div class="card" id="pending-matches">
+                    <h2 class="section-title">Pending Buddy Requests</h2>
+                    {% if pending_matches %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Buddy Name</th>
+                                <th>Requested On</th>
+                                <th>Match Score</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for match in pending_matches %}
+                            <tr>
+                                <td>{{ match.buddy_name }}</td>
+                                <td>{{ match.formatted_created_at }}</td>
+                                <td>{{ match.match_score }}%</td>
+                                <td>Pending Approval</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <p>No pending buddy requests at this time.</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
-            <div class="card" id="pending-matches">
-                <h2 class="section-title">Pending Buddy Requests</h2>
-                {% if pending_matches %}
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Buddy Name</th>
-                            <th>Requested On</th>
-                            <th>Match Score</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for match in pending_matches %}
-                        <tr>
-                            <td>{{ match.buddy_name }}</td>
-                            <td>{{ match.formatted_created_at }}</td>
-                            <td>{{ match.match_score }}%</td>
-                            <td>Pending Approval</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="empty-state">
-                    <p>No pending buddy requests at this time.</p>
-                </div>
-                {% endif %}
-            </div>
         </div>
     </div>
-</body>
 
+    <!-- Chat System -->
+    <button class="chat-button" onclick="toggleChat()">💬</button>
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <span id="chatTitle">Buddy Chat</span>
+            <span style="cursor:pointer;" onclick="toggleChat()">✖</span>
+        </div>
+        
+        <div class="chat-buddy-selector">
+            <select id="buddySelector" onchange="loadChat(this.value)">
+                <option value="">Select a buddy to chat with...</option>
+                {% if approved_matches %}
+                    {% for match in approved_matches %}
+                    <option value="{{ match.buddy_id }}">{{ match.buddy_name }}</option>
+                    {% endfor %}
+                {% endif %}
+            </select>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="no-chat-selected">
+                <p>Please select a buddy to start chatting</p>
+            </div>
+        </div>
+        
+        <div class="chat-input" id="chatInputContainer" style="display:none;">
+            <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Get user ID from Flask session
+        const sessionUserId = "{{ session.get('user_id') }}";
+        let currentBuddyId = null;
+        let currentBuddyName = null;
+        let chatRefreshInterval = null;
+        
+        // Toggle chat window visibility
+        function toggleChat() {
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.style.display = chatWindow.style.display === "flex" ? "none" : "flex";
+            
+            if (chatWindow.style.display === "flex") {
+                // Start refreshing messages when chat is open
+                startMessageRefresh();
+            } else {
+                // Stop refreshing messages when chat is closed
+                stopMessageRefresh();
+                resetChat();
+            }
+        }
+        
+        // Start periodic message refresh
+        function startMessageRefresh() {
+            if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+            chatRefreshInterval = setInterval(() => {
+                if (currentBuddyId) {
+                    loadChat(currentBuddyId, currentBuddyName, true); // Silent refresh
+                }
+            }, 3000); // Refresh every 3 seconds
+        }
+        
+        // Stop periodic message refresh
+        function stopMessageRefresh() {
+            if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+            chatRefreshInterval = null;
+        }
+        
+        // Open chat directly with a specific buddy
+        function openChatWithBuddy(buddyId, buddyName) {
+            toggleChat();
+            document.getElementById('buddySelector').value = buddyId;
+            loadChat(buddyId, buddyName);
+        }
+        
+        // Load chat with selected buddy
+        async function loadChat(buddyId, buddyName = null, silent = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const chatInputContainer = document.getElementById('chatInputContainer');
+            
+            if (!buddyId) {
+                resetChat();
+                return;
+            }
+            
+            // Set current buddy
+            currentBuddyId = buddyId;
+            currentBuddyName = buddyName || document.getElementById('buddySelector').options[document.getElementById('buddySelector').selectedIndex].text;
+            
+            // Update UI if not silent refresh
+            if (!silent) {
+                document.getElementById('chatTitle').textContent = `Chat with ${currentBuddyName}`;
+                chatInputContainer.style.display = "flex";
+                
+                // Clear and show loading state
+                chatMessages.innerHTML = '<div class="no-chat-selected"><p>Loading messages...</p></div>';
+            }
+            
+            try {
+                // Fetch messages from server
+                const response = await fetch(`/get_messages?user_id=${sessionUserId}&buddy_id=${buddyId}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Process messages to identify sender
+                    const processedMessages = data.messages.map(msg => ({
+                        ...msg,
+                        sender: msg.sender_id === sessionUserId ? 'you' : 'buddy'
+                    }));
+                    
+                    displayMessages(processedMessages);
+                } else if (!silent) {
+                    chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages</p></div>';
+                }
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+                if (!silent) {
+                    chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages</p></div>';
+                }
+            }
+        }
+        
+        // Display messages in chat
+        function displayMessages(messages) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            if (messages.length === 0) {
+                // Only show "no messages" if we're not in silent refresh mode
+                if (!chatRefreshInterval) {
+                    chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages yet. Start the conversation!</p></div>';
+                }
+                return;
+            }
+            
+            // Create a temporary container to build our messages in
+            const tempContainer = document.createElement('div');
+            
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = msg.sender === 'you' ? 'message your-message' : 'message buddy-message';
+                
+                messageDiv.innerHTML = `
+                    <div>${msg.content}</div>
+                    <div class="message-time">${formatTime(msg.timestamp)}</div>
+                    ${msg.status ? `<div class="message-status">${msg.status}</div>` : ''}
+                `;
+                
+                tempContainer.appendChild(messageDiv);
+            });
+            
+            // Only replace if there are actual messages
+            chatMessages.innerHTML = '';
+            chatMessages.appendChild(tempContainer);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Send a new message
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || !currentBuddyId) return;
+            
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // Create temporary message (optimistic UI update)
+            const tempId = 'temp-' + Date.now();
+            const messageDiv = document.createElement('div');
+            messageDiv.id = tempId;
+            messageDiv.className = 'message your-message';
+            messageDiv.innerHTML = `
+                <div>${message}</div>
+                <div class="message-time">Sending...</div>
+            `;
+            
+            // Remove "no messages" placeholder if present
+            if (chatMessages.querySelector('.no-chat-selected')) {
+                chatMessages.innerHTML = '';
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            input.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            try {
+                // Send to server
+                const response = await fetch('/send_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sender_id: sessionUserId,
+                        receiver_id: currentBuddyId,
+                        content: message
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Update the temporary message with real data
+                    messageDiv.innerHTML = `
+                        <div>${message}</div>
+                        <div class="message-time">${formatTime(result.timestamp)}</div>
+                    `;
+                    
+                    // Force refresh to get any new messages
+                    loadChat(currentBuddyId, currentBuddyName, true);
+                } else {
+                    // Show error
+                    messageDiv.innerHTML = `
+                        <div>${message}</div>
+                        <div class="message-time" style="color:red;">Failed to send</div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                messageDiv.innerHTML = `
+                    <div>${message}</div>
+                    <div class="message-time" style="color:red;">Network error</div>
+                `;
+            }
+        }
+        
+        // Reset chat to initial state
+        function resetChat() {
+            currentBuddyId = null;
+            currentBuddyName = null;
+            document.getElementById('chatTitle').textContent = 'Buddy Chat';
+            document.getElementById('buddySelector').value = '';
+            document.getElementById('chatMessages').innerHTML = '<div class="no-chat-selected"><p>Please select a buddy to start chatting</p></div>';
+            document.getElementById('chatInputContainer').style.display = 'none';
+        }
+        
+        // Format timestamp for display
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        // Handle Enter key in message input
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        // Initialize chat when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if there's a buddy ID in URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            const buddyId = urlParams.get('open_chat');
+            const buddyName = urlParams.get('buddy_name');
+            
+            if (buddyId && buddyName) {
+                openChatWithBuddy(buddyId, buddyName);
+            }
+        });
+    </script>
+</body>
 </html>

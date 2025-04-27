@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +14,8 @@
 
         .profile-card,
         .matches-card,
-        .sessions-card {
+        .sessions-card,
+        .events-card {
             background-color: white;
             padding: 20px;
             border-radius: 10px;
@@ -60,17 +60,195 @@
         .session-card {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 15px;
             border-bottom: 1px solid #eee;
         }
 
-        .match-pic,
-        .session-pic {
+        .match-info,
+        .session-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .match-pic {
             width: 50px;
             height: 50px;
+            background-color: #ccc;
             border-radius: 50%;
-            background-color: #ddd;
-            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-right: +15px;
+            color: rgb(133, 0, 0);
+        }
+
+        .message-student-btn {
+            background-color: #2d873f;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+
+        .details-btn {
+            background-color: #2d873f;
+            color: white;
+            border: none;
+        }
+
+        .reject-btn {
+            background-color: #871f2d;
+            color: white;
+            border: none;
+        }
+
+        /* CHAT SYSTEM STYLES (same as student dashboard) */
+        .chat-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #871f2d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .chat-window {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 450px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .chat-header {
+            background-color: #871f2d;
+            color: white;
+            padding: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-student-selector {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .chat-student-selector select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .your-message {
+            background-color: #e3f2fd;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .student-message {
+            background-color: #f1f1f1;
+            margin-right: auto;
+        }
+
+        .message-time {
+            font-size: 0.7em;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .message-status {
+            font-size: 0.7em;
+            font-style: italic;
+        }
+
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .chat-input button {
+            background-color: #871f2d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        .no-chat-selected {
+            padding: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-window {
+                width: 280px;
+                height: 400px;
+                right: 10px;
+            }
         }
     </style>
 </head>
@@ -101,102 +279,377 @@
                         <h4>My Interests</h4>
                         <div class="interests-list">
                             {% if user_details and user_details.interests %}
-                            {% for interest in user_details.interests.split(',') %}
-                            <span class="interest-tag">{{ interest }}</span>
-                            {% endfor %}
+                                {% for interest in user_details.interests.split(',') %}
+                                <span class="interest-tag">{{ interest }}</span>
+                                {% endfor %}
                             {% else %}
-                            <p>No interests specified</p>
+                                <p>No interests specified</p>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="card" id="pending-matches">
-                <h2 class="section-title">Pending Match Requests</h2>
-                {% if pending_matches %}
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Student Name</th>
-                            <th>Requested On</th>
-                            <th>Match Score</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for match in pending_matches %}
-                        <tr>
-                            <td>{{ match.student_name }}</td>
-                            <td>{{ match.formatted_created_at }}</td>
-                            <td>{{ match.match_score }}%</td>
-                            <td>
-                                <form action="{{ url_for('approve_match', match_id=match.id) }}" method="POST" style="display: inline;">
-                                    <button type="submit" class="action-btn details-btn">Approve</button>
-                                </form>
-                                <form action="{{ url_for('reject_match', match_id=match.id) }}" method="POST" style="display: inline;">
-                                    <button type="submit" class="action-btn reject-btn">Reject</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <div class="empty-state">
-                    <p>No pending match requests at this time.</p>
+
+                <div class="card" id="pending-matches">
+                    <h2 class="section-title">Pending Match Requests</h2>
+                    {% if pending_matches %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Requested On</th>
+                                <th>Match Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for match in pending_matches %}
+                            <tr>
+                                <td>{{ match.student_name }}</td>
+                                <td>{{ match.formatted_created_at }}</td>
+                                <td>{{ match.match_score }}%</td>
+                                <td>
+                                    <form action="{{ url_for('approve_match', match_id=match.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="action-btn details-btn">Approve</button>
+                                    </form>
+                                    <form action="{{ url_for('reject_match', match_id=match.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="action-btn reject-btn">Reject</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <p>No pending match requests at this time.</p>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
+
             <div class="right-column">
                 <div class="matches-card">
                     <h2>Your Student Matches</h2>
                     {% if matches %}
-                    {% for match in matches %}
-                    <div class="match-card">
-                        <div class="match-pic">{{ match.student_name[0] }}</div>
-                        <div>
-                            <h4>{{ match.student_name }}</h4>
-                            <p>Status: {{ match.status }}</p>
+                        {% for match in matches %}
+                        <div class="match-card">
+                            <div class="match-info">
+                                <div class="match-pic">{{ match.student_name[0] }}</div>
+                                <div>
+                                    <h4>{{ match.student_name }}</h4>
+                                    <p>Status: {{ match.status }}</p>
+                                </div>
+                            </div>
+                            {% if match.status == 'approved' %}
+                            <button class="message-student-btn" onclick="openChatWithStudent('{{ match.student_id }}', '{{ match.student_name }}')">
+                                Message
+                            </button>
+                            {% endif %}
                         </div>
-                    </div>
-                    {% endfor %}
+                        {% endfor %}
                     {% else %}
-                    <p>You don't have any matches yet.</p>
+                        <p>You don't have any matches yet.</p>
                     {% endif %}
                 </div>
 
                 <div class="sessions-card">
                     <h2>Upcoming Sessions</h2>
                     {% if sessions %}
-                    {% for session in sessions %}
-                    <div class="session-card">
-                        <div class="session-pic">{{ session.student_name[0] }}</div>
-                        <div>
-                            <h4>{{ session.student_name }}</h4>
-                            <p>{{ session.formatted_scheduled_time }} - {{ session.session_type }}</p>
+                        {% for session in sessions %}
+                        <div class="session-card">
+                            <div class="session-info">
+                                <div class="session-pic">{{ session.student_name[0] }}</div>
+                                <div>
+                                    <h4>{{ session.student_name }}</h4>
+                                    <p>{{ session.formatted_scheduled_time }} - {{ session.session_type }}</p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    {% endfor %}
+                        {% endfor %}
                     {% else %}
-                    <p>No upcoming sessions.</p>
+                        <p>No upcoming sessions.</p>
                     {% endif %}
                 </div>
+
                 <div class="events-card">
                     <h2>Upcoming Events</h2>
                     {% if events %}
-                    {% for event in events %}
-                    <div class="event-card">
-                        <h4>{{ event.title }}</h4>
-                        <p>{{ event.formatted_start_time }} - {{ event.event_type }}</p>
-                    </div>
-                    {% endfor %}
+                        {% for event in events %}
+                        <div class="event-card">
+                            <h4>{{ event.title }}</h4>
+                            <p>{{ event.formatted_start_time }} - {{ event.event_type }}</p>
+                        </div>
+                        {% endfor %}
                     {% else %}
-                    <p>No upcoming events.</p>
+                        <p>No upcoming events.</p>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
-</body>
 
+    <!-- Chat System (similar to student dashboard but for students) -->
+    <button class="chat-button" onclick="toggleChat()">💬</button>
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <span id="chatTitle">Student Chat</span>
+            <span style="cursor:pointer;" onclick="toggleChat()">✖</span>
+        </div>
+        
+        <div class="chat-student-selector">
+            <select id="studentSelector" onchange="loadChat(this.value)">
+                <option value="">Select a student to chat with...</option>
+                {% if approved_matches %}
+                    {% for match in approved_matches %}
+                    <option value="{{ match.student_id }}">{{ match.student_name }}</option>
+                    {% endfor %}
+                {% endif %}
+            </select>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="no-chat-selected">
+                <p>Please select a student to start chatting</p>
+            </div>
+        </div>
+        
+        <div class="chat-input" id="chatInputContainer" style="display:none;">
+            <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Get user ID from Flask session
+        const sessionUserId = "{{ session.get('user_id') }}";
+        let currentStudentId = null;
+        let currentStudentName = null;
+        let chatRefreshInterval = null;
+        
+        // Toggle chat window visibility
+        function toggleChat() {
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.style.display = chatWindow.style.display === "flex" ? "none" : "flex";
+            
+            if (chatWindow.style.display === "flex") {
+                // Start refreshing messages when chat is open
+                startMessageRefresh();
+            } else {
+                // Stop refreshing messages when chat is closed
+                stopMessageRefresh();
+                resetChat();
+            }
+        }
+        
+        // Start periodic message refresh
+        function startMessageRefresh() {
+            if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+            chatRefreshInterval = setInterval(() => {
+                if (currentStudentId) {
+                    loadChat(currentStudentId, currentStudentName, true); // Silent refresh
+                }
+            }, 3000); // Refresh every 3 seconds
+        }
+        
+        // Stop periodic message refresh
+        function stopMessageRefresh() {
+            if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+            chatRefreshInterval = null;
+        }
+        
+        // Open chat directly with a specific student
+        function openChatWithStudent(studentId, studentName) {
+            toggleChat();
+            document.getElementById('studentSelector').value = studentId;
+            loadChat(studentId, studentName);
+        }
+        
+        // Load chat with selected student
+        async function loadChat(studentId, studentName = null, silent = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const chatInputContainer = document.getElementById('chatInputContainer');
+            
+            if (!studentId) {
+                resetChat();
+                return;
+            }
+            
+            // Set current student
+            currentStudentId = studentId;
+            currentStudentName = studentName || document.getElementById('studentSelector').options[document.getElementById('studentSelector').selectedIndex].text;
+            
+            // Update UI if not silent refresh
+            if (!silent) {
+                document.getElementById('chatTitle').textContent = `Chat with ${currentStudentName}`;
+                chatInputContainer.style.display = "flex";
+                
+                // Clear and show loading state
+                chatMessages.innerHTML = '<div class="no-chat-selected"><p>Loading messages...</p></div>';
+            }
+            
+            try {
+                // Fetch messages from server
+                const response = await fetch(`/get_messages?user_id=${sessionUserId}&student_id=${studentId}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Process messages to identify sender
+                    const processedMessages = data.messages.map(msg => ({
+                        ...msg,
+                        sender: msg.sender_id === sessionUserId ? 'you' : 'student'
+                    }));
+                    
+                    displayMessages(processedMessages);
+                } else if (!silent) {
+                    chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages</p></div>';
+                }
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+                if (!silent) {
+                    chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages</p></div>';
+                }
+            }
+        }
+        
+        // Display messages in chat
+        function displayMessages(messages) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            if (messages.length === 0) {
+                // Only show "no messages" if we're not in silent refresh mode
+                if (!chatRefreshInterval) {
+                    chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages yet. Start the conversation!</p></div>';
+                }
+                return;
+            }
+            
+            // Create a temporary container to build our messages in
+            const tempContainer = document.createElement('div');
+            
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = msg.sender === 'you' ? 'message your-message' : 'message student-message';
+                
+                messageDiv.innerHTML = `
+                    <div>${msg.content}</div>
+                    <div class="message-time">${formatTime(msg.timestamp)}</div>
+                    ${msg.status ? `<div class="message-status">${msg.status}</div>` : ''}
+                `;
+                
+                tempContainer.appendChild(messageDiv);
+            });
+            
+            // Only replace if there are actual messages
+            chatMessages.innerHTML = '';
+            chatMessages.appendChild(tempContainer);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Send a new message
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || !currentStudentId) return;
+            
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // Create temporary message (optimistic UI update)
+            const tempId = 'temp-' + Date.now();
+            const messageDiv = document.createElement('div');
+            messageDiv.id = tempId;
+            messageDiv.className = 'message your-message';
+            messageDiv.innerHTML = `
+                <div>${message}</div>
+                <div class="message-time">Sending...</div>
+            `;
+            
+            // Remove "no messages" placeholder if present
+            if (chatMessages.querySelector('.no-chat-selected')) {
+                chatMessages.innerHTML = '';
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            input.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            try {
+                // Send to server
+                const response = await fetch('/send_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sender_id: sessionUserId,
+                        receiver_id: currentStudentId,
+                        content: message
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Update the temporary message with real data
+                    messageDiv.innerHTML = `
+                        <div>${message}</div>
+                        <div class="message-time">${formatTime(result.timestamp)}</div>
+                    `;
+                    
+                    // Force refresh to get any new messages
+                    loadChat(currentStudentId, currentStudentName, true);
+                } else {
+                    // Show error
+                    messageDiv.innerHTML = `
+                        <div>${message}</div>
+                        <div class="message-time" style="color:red;">Failed to send</div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                messageDiv.innerHTML = `
+                    <div>${message}</div>
+                    <div class="message-time" style="color:red;">Network error</div>
+                `;
+            }
+        }
+        
+        // Reset chat to initial state
+        function resetChat() {
+            currentStudentId = null;
+            currentStudentName = null;
+            document.getElementById('chatTitle').textContent = 'Student Chat';
+            document.getElementById('studentSelector').value = '';
+            document.getElementById('chatMessages').innerHTML = '<div class="no-chat-selected"><p>Please select a student to start chatting</p></div>';
+            document.getElementById('chatInputContainer').style.display = 'none';
+        }
+        
+        // Format timestamp for display
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        // Handle Enter key in message input
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        // Initialize chat when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if there's a student ID in URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            const studentId = urlParams.get('open_chat');
+            const studentName = urlParams.get('student_name');
+            
+            if (studentId && studentName) {
+                openChatWithStudent(studentId, studentName);
+            }
+        });
+    </script>
+</body>
 </html>

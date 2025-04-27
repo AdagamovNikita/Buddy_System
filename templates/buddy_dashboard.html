@@ -116,7 +116,6 @@
             border: none;
         }
 
-        /* CHAT SYSTEM STYLES (same as student dashboard) */
         .chat-button {
             position: fixed;
             bottom: 20px;
@@ -388,7 +387,6 @@
         </div>
     </div>
 
-    <!-- Chat System (similar to student dashboard but for students) -->
     <button class="chat-button" onclick="toggleChat()">💬</button>
     <div class="chat-window" id="chatWindow">
         <div class="chat-header">
@@ -420,51 +418,43 @@
     </div>
 
     <script>
-        // Get user ID from Flask session
         const sessionUserId = "{{ session.get('user_id') }}";
         let currentStudentId = null;
         let currentStudentName = null;
         let chatRefreshInterval = null;
         
-        // Toggle chat window visibility
         function toggleChat() {
             const chatWindow = document.getElementById('chatWindow');
             chatWindow.style.display = chatWindow.style.display === "flex" ? "none" : "flex";
             
             if (chatWindow.style.display === "flex") {
-                // Start refreshing messages when chat is open
                 startMessageRefresh();
             } else {
-                // Stop refreshing messages when chat is closed
                 stopMessageRefresh();
                 resetChat();
             }
         }
         
-        // Start periodic message refresh
         function startMessageRefresh() {
             if (chatRefreshInterval) clearInterval(chatRefreshInterval);
             chatRefreshInterval = setInterval(() => {
                 if (currentStudentId) {
-                    loadChat(currentStudentId, currentStudentName, true); // Silent refresh
+                    loadChat(currentStudentId, currentStudentName, true); 
                 }
-            }, 3000); // Refresh every 3 seconds
+            }, 3000); 
         }
         
-        // Stop periodic message refresh
         function stopMessageRefresh() {
             if (chatRefreshInterval) clearInterval(chatRefreshInterval);
             chatRefreshInterval = null;
         }
         
-        // Open chat directly with a specific student
         function openChatWithStudent(studentId, studentName) {
             toggleChat();
             document.getElementById('studentSelector').value = studentId;
             loadChat(studentId, studentName);
         }
         
-        // Load chat with selected student
         async function loadChat(studentId, studentName = null, silent = false) {
             const chatMessages = document.getElementById('chatMessages');
             const chatInputContainer = document.getElementById('chatInputContainer');
@@ -474,26 +464,21 @@
                 return;
             }
             
-            // Set current student
             currentStudentId = studentId;
             currentStudentName = studentName || document.getElementById('studentSelector').options[document.getElementById('studentSelector').selectedIndex].text;
             
-            // Update UI if not silent refresh
             if (!silent) {
                 document.getElementById('chatTitle').textContent = `Chat with ${currentStudentName}`;
                 chatInputContainer.style.display = "flex";
                 
-                // Clear and show loading state
                 chatMessages.innerHTML = '<div class="no-chat-selected"><p>Loading messages...</p></div>';
             }
             
             try {
-                // Fetch messages from server
                 const response = await fetch(`/get_messages?user_id=${sessionUserId}&student_id=${studentId}`);
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    // Process messages to identify sender
                     const processedMessages = data.messages.map(msg => ({
                         ...msg,
                         sender: msg.sender_id === sessionUserId ? 'you' : 'student'
@@ -511,19 +496,16 @@
             }
         }
         
-        // Display messages in chat
         function displayMessages(messages) {
             const chatMessages = document.getElementById('chatMessages');
             
             if (messages.length === 0) {
-                // Only show "no messages" if we're not in silent refresh mode
                 if (!chatRefreshInterval) {
                     chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages yet. Start the conversation!</p></div>';
                 }
                 return;
             }
             
-            // Create a temporary container to build our messages in
             const tempContainer = document.createElement('div');
             
             messages.forEach(msg => {
@@ -539,15 +521,12 @@
                 tempContainer.appendChild(messageDiv);
             });
             
-            // Only replace if there are actual messages
             chatMessages.innerHTML = '';
             chatMessages.appendChild(tempContainer);
             
-            // Scroll to bottom
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
         
-        // Send a new message
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
@@ -556,7 +535,6 @@
             
             const chatMessages = document.getElementById('chatMessages');
             
-            // Create temporary message (optimistic UI update)
             const tempId = 'temp-' + Date.now();
             const messageDiv = document.createElement('div');
             messageDiv.id = tempId;
@@ -566,7 +544,6 @@
                 <div class="message-time">Sending...</div>
             `;
             
-            // Remove "no messages" placeholder if present
             if (chatMessages.querySelector('.no-chat-selected')) {
                 chatMessages.innerHTML = '';
             }
@@ -576,7 +553,6 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
             try {
-                // Send to server
                 const response = await fetch('/send_message', {
                     method: 'POST',
                     headers: {
@@ -592,16 +568,13 @@
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    // Update the temporary message with real data
                     messageDiv.innerHTML = `
                         <div>${message}</div>
                         <div class="message-time">${formatTime(result.timestamp)}</div>
                     `;
                     
-                    // Force refresh to get any new messages
                     loadChat(currentStudentId, currentStudentName, true);
                 } else {
-                    // Show error
                     messageDiv.innerHTML = `
                         <div>${message}</div>
                         <div class="message-time" style="color:red;">Failed to send</div>
@@ -616,7 +589,6 @@
             }
         }
         
-        // Reset chat to initial state
         function resetChat() {
             currentStudentId = null;
             currentStudentName = null;
@@ -626,22 +598,18 @@
             document.getElementById('chatInputContainer').style.display = 'none';
         }
         
-        // Format timestamp for display
         function formatTime(timestamp) {
             const date = new Date(timestamp);
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
         
-        // Handle Enter key in message input
         function handleKeyPress(e) {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         }
         
-        // Initialize chat when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if there's a student ID in URL params
             const urlParams = new URLSearchParams(window.location.search);
             const studentId = urlParams.get('open_chat');
             const studentName = urlParams.get('student_name');

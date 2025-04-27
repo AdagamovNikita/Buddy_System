@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
@@ -273,19 +273,20 @@ def initialize_db():
             preferred_language TEXT
         );
 
-        CREATE TABLE IF NOT EXISTS buddy_matches (
+       CREATE TABLE IF NOT EXISTS buddy_matches (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             buddy_id INTEGER,
             student_id INTEGER,
             status TEXT CHECK(status IN ('pending', 'active', 'declined', 'completed', 'paused')) DEFAULT 'pending',
             match_score INTEGER,
             matched_by_admin BOOLEAN DEFAULT FALSE,
+            admin_approved BOOLEAN DEFAULT FALSE,  -- Make sure this is included
             admin_notes TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE (buddy_id, student_id),
             CHECK (buddy_id != student_id)
-        );
+            );
 
         CREATE TABLE IF NOT EXISTS messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -508,6 +509,35 @@ def get_potential_buddies(student_id, major_filter=None, language_filter=None, y
         return []
     finally:
         conn.close()
+
+
+
+def add_admin_approved_column():
+    conn = get_db_connection()
+    try:
+        # Check if the column exists
+        conn.execute("PRAGMA table_info(buddy_matches);")
+        columns = [column[1] for column in conn.fetchall()]
+        
+        # Add the column if it doesn't exist
+        if 'admin_approved' not in columns:
+            conn.execute("""
+                ALTER TABLE buddy_matches
+                ADD COLUMN admin_approved BOOLEAN DEFAULT FALSE;
+            """)
+            conn.commit()
+            print("Column 'admin_approved' added successfully.")
+        else:
+            print("Column 'admin_approved' already exists.")
+    
+    except Exception as e:
+        print(f"Error adding column: {e}")
+    
+    finally:
+        conn.close()
+
+
+
 
 @app.route("/")
 def index():
@@ -816,6 +846,10 @@ def student_dashboard():
             (session["user_id"],)
         ).fetchall()
 
+
+        approved_matches = [m for m in matches if m["status"] in ("approved", "active")]
+
+
         pending_matches = conn.execute(
             """SELECT bm.*, u.full_name as buddy_name, 
                datetime(bm.created_at) as formatted_created_at
@@ -837,7 +871,8 @@ def student_dashboard():
                             user_details=user_details,
                             matches=matches,
                             pending_matches=pending_matches,
-                            events=events)
+                            events=events,
+                            approved_matches=approved_matches)
     finally:
         conn.close()
 
@@ -864,6 +899,7 @@ def buddy_dashboard():
             flash("Please complete your profile first", "info")
             return redirect(url_for("complete_profile"))
 
+        # Get all matches
         matches = conn.execute(
             """SELECT bm.*, u.full_name as student_name, 
                datetime(bm.created_at) as formatted_created_at
@@ -873,6 +909,10 @@ def buddy_dashboard():
             (session["user_id"],)
         ).fetchall()
 
+        # Filter approved matches
+        approved_matches = [m for m in matches if m["status"].lower() in ("approved", "active")]
+        
+        # Get pending matches separately for better performance
         pending_matches = conn.execute(
             """SELECT bm.*, u.full_name as student_name, 
                datetime(bm.created_at) as formatted_created_at
@@ -901,12 +941,13 @@ def buddy_dashboard():
         ).fetchall()
 
         return render_template("buddy_dashboard.html",
-                            full_name=session["full_name"],
-                            user_details=user_details,
-                            matches=matches,
-                            pending_matches=pending_matches,
-                            sessions=sessions,
-                            events=events)
+                    full_name=session["full_name"],
+                    user_details=user_details,
+                    matches=matches,
+                    approved_matches=approved_matches,
+                    pending_matches=pending_matches,
+                    sessions=sessions,
+                    events=events)
     finally:
         conn.close()
 
@@ -1115,15 +1156,16 @@ def request_match(buddy_id):
 
 @app.route("/approve-match/<int:match_id>", methods=["POST"])
 def approve_match(match_id):
+    # Ensure user is logged in and has the role 'buddy'
     if "user_id" not in session or session["role"] != "buddy":
         flash("Unauthorized access", "error")
         return redirect(url_for("login"))
-    
+
     conn = get_db_connection()
     try:
-        # First check if buddy already has 3 active matches
+        # First, check if the match exists
         match = conn.execute(
-            "SELECT buddy_id FROM buddy_matches WHERE id = ?", 
+            "SELECT buddy_id, student_id, status FROM buddy_matches WHERE id = ?", 
             (match_id,)
         ).fetchone()
         
@@ -1131,6 +1173,12 @@ def approve_match(match_id):
             flash("Match not found", "error")
             return redirect(url_for("buddy_dashboard"))
         
+        # Ensure match is still in 'pending' status
+        if match['status'] != 'pending':
+            flash("Match has already been approved or declined", "error")
+            return redirect(url_for("buddy_dashboard"))
+
+        # Check if the buddy already has 3 active matches
         active_matches = conn.execute(
             "SELECT COUNT(*) FROM buddy_matches WHERE buddy_id = ? AND status = 'active'", 
             (match['buddy_id'],)
@@ -1140,41 +1188,49 @@ def approve_match(match_id):
             flash("You already have 3 active students. Cannot accept more.", "error")
             return redirect(url_for("buddy_dashboard"))
         
-        # Approve the match
+        # Approve the match: Set status to 'active'
         conn.execute(
             "UPDATE buddy_matches SET status = 'active', updated_at = datetime('now') WHERE id = ?", 
             (match_id,)
         )
         
-        # Get student details for notification
-        student = conn.execute(
-            "SELECT student_id, full_name FROM users WHERE id = (SELECT student_id FROM buddy_matches WHERE id = ?)", 
+        # Optionally, you can set the 'admin_approved' column if needed, depending on your logic
+        conn.execute(
+            "UPDATE buddy_matches SET admin_approved = 1 WHERE id = ?", 
             (match_id,)
+        )
+        
+        # Get student details for sending a notification
+        student = conn.execute(
+            "SELECT full_name FROM users WHERE id = ?", 
+            (match['student_id'],)
         ).fetchone()
         
-        # Create notification for student
+        # Create a notification for the student about the approval
         conn.execute(
             """INSERT INTO notifications 
             (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
             VALUES (?, ?, ?, ?, ?, ?)""",
-            (student['student_id'], 
+            (match['student_id'], 
              "Match Approved", 
-             f"Your match request has been approved!",
+             f"Your match request with {session['full_name']} has been approved!",  # You could change this message to be more personalized
              "match_approved",
              "buddy_match",
-             match_id))
-        
+             match_id)
+        )
+
         conn.commit()
         
         flash("Match approved successfully", "success")
         return redirect(url_for("buddy_dashboard"))
         
     except Exception as e:
-        conn.rollback()
+        conn.rollback()  # Rollback the transaction in case of an error
         flash(f"Error approving match: {str(e)}", "error")
         return redirect(url_for("buddy_dashboard"))
     finally:
         conn.close()
+
 
 @app.route("/reject-match/<int:match_id>", methods=["POST"])
 def reject_match(match_id):
@@ -1219,6 +1275,131 @@ def reject_match(match_id):
         return redirect(url_for("buddy_dashboard"))
     finally:
         conn.close()
+
+
+
+
+
+
+
+@app.route("/admin/approve-match/<int:match_id>", methods=["POST"])
+def admin_approve_match(match_id):
+    print("Session:", dict(session))  # DEBUG HERE
+    
+    if "user_id" not in session or not session.get("is_admin"):
+        flash("Unauthorized access", "error")
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        print(f"Attempting to approve match with ID: {match_id}")  # Debugging the match ID
+        
+        # Approve the match as ADMIN (without 3 matches check)
+        conn.execute(
+            "UPDATE buddy_matches SET admin_approved = 1, updated_at = datetime('now') WHERE id = ?", 
+            (match_id,)
+        )
+        conn.commit()
+        
+        print(f"Successfully approved match with ID: {match_id}")  # Success message in debug
+        
+        flash("Match approved by admin successfully", "success")
+        return redirect(url_for("admin_dashboard"))
+
+    except Exception as e:
+        conn.rollback()
+        print(f"Error occurred while approving match: {str(e)}")  # Debugging the error
+        flash(f"Error approving match as admin: {str(e)}", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    finally:
+        conn.close()
+
+
+
+
+@app.route('/messages/<int:match_id>', methods=['GET', 'POST'])
+def chat(match_id):
+    conn = get_db_connection()
+    match = conn.execute('SELECT * FROM buddy_matches WHERE id = ?', (match_id,)).fetchone()
+
+    if not match or match['status'] != 'active':
+        flash('You can only message active matches.', 'error')
+        return redirect(url_for('buddy_dashboard'))
+
+    if request.method == 'POST':
+        content = request.form['content']
+        sender_id = session['user_id']
+        receiver_id = match['student_id'] if sender_id == match['buddy_id'] else match['buddy_id']
+
+        conn.execute('INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)',
+                     (sender_id, receiver_id, content))
+        conn.commit()
+        flash('Message sent!', 'success')
+    
+    # Fetch chat history
+    sender_id = session['user_id']
+    receiver_id = match['student_id'] if sender_id == match['buddy_id'] else match['buddy_id']
+    messages = conn.execute('''
+        SELECT * FROM messages
+        WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
+        ORDER BY sent_at
+    ''', (sender_id, receiver_id, receiver_id, sender_id)).fetchall()
+
+    conn.close()
+    return render_template('chat.html', match=match, messages=messages)
+
+
+    # Message storage (in a real app, use a database like SQLite/PostgreSQL)
+messages = {}
+
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    data = request.get_json()
+    
+    # Validate data
+    if not all(key in data for key in ['sender_id', 'receiver_id', 'content']):
+        return jsonify({'status': 'error', 'message': 'Missing required fields'}), 400
+    
+    # Create message object
+    message = {
+        'sender_id': data['sender_id'],
+        'content': data['content'],
+        'timestamp': datetime.now().isoformat()
+    }
+    
+    # Store message (key is combination of user IDs in sorted order)
+    chat_key = tuple(sorted([data['sender_id'], data['receiver_id']]))
+    
+    if chat_key not in messages:
+        messages[chat_key] = []
+    
+    messages[chat_key].append(message)
+    
+    return jsonify({'status': 'success', 'message': 'Message sent'})
+
+@app.route('/get_messages', methods=['GET'])
+def get_messages():
+    user_id = request.args.get('user_id')
+    # Accept both buddy_id and student_id parameters
+    other_id = request.args.get('buddy_id') or request.args.get('student_id')
+    
+    if not user_id or not other_id:
+        return jsonify({'status': 'error', 'message': 'Missing user or chat partner ID'}), 400
+    
+    chat_key = tuple(sorted([user_id, other_id]))
+    
+    if chat_key not in messages:
+        return jsonify({'messages': []})
+    
+    # Filter messages for this conversation
+    conversation_messages = messages[chat_key]
+    
+    return jsonify({
+        'messages': conversation_messages,
+        'status': 'success'
+    })
+    
 
 if __name__ == "__main__":
     if not os.path.exists("buddy_system.db"):

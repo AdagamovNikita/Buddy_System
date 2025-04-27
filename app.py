@@ -899,7 +899,6 @@ def buddy_dashboard():
             flash("Please complete your profile first", "info")
             return redirect(url_for("complete_profile"))
 
-        # Get all matches
         matches = conn.execute(
             """SELECT bm.*, u.full_name as student_name, 
                datetime(bm.created_at) as formatted_created_at
@@ -909,10 +908,8 @@ def buddy_dashboard():
             (session["user_id"],)
         ).fetchall()
 
-        # Filter approved matches
         approved_matches = [m for m in matches if m["status"].lower() in ("approved", "active")]
         
-        # Get pending matches separately for better performance
         pending_matches = conn.execute(
             """SELECT bm.*, u.full_name as student_name, 
                datetime(bm.created_at) as formatted_created_at
@@ -994,7 +991,6 @@ def buddy_details(buddy_id):
             flash("Buddy not found", "error")
             return redirect(url_for("view_potential_matches"))
         
-        # Calculate match score
         student_details = conn.execute(
             "SELECT * FROM user_details WHERE user_id = ?", 
             (session["user_id"],)
@@ -1039,7 +1035,6 @@ def request_match(buddy_id):
     
     conn = get_db_connection()
     try:
-        # Check if student already has an active buddy
         active_match = conn.execute(
             "SELECT 1 FROM buddy_matches WHERE student_id = ? AND status = 'active'", 
             (session["user_id"],)
@@ -1049,7 +1044,6 @@ def request_match(buddy_id):
             flash("You already have an active buddy", "info")
             return redirect(url_for("view_potential_matches"))
         
-        # Check if there's already a pending request with this buddy
         existing_request = conn.execute(
             "SELECT 1 FROM buddy_matches WHERE student_id = ? AND buddy_id = ? AND status = 'pending'", 
             (session["user_id"], buddy_id)
@@ -1059,7 +1053,6 @@ def request_match(buddy_id):
             flash("You already have a pending request with this buddy", "info")
             return redirect(url_for("view_potential_matches"))
         
-        # Check if buddy has reached maximum students (3)
         buddy_active_matches = conn.execute(
             "SELECT COUNT(*) FROM buddy_matches WHERE buddy_id = ? AND status = 'active'", 
             (buddy_id,)
@@ -1069,7 +1062,6 @@ def request_match(buddy_id):
             flash("This buddy has reached the maximum number of students", "info")
             return redirect(url_for("view_potential_matches"))
         
-        # Calculate match score (same as in buddy_details)
         student_details = conn.execute(
             "SELECT * FROM user_details WHERE user_id = ?", 
             (session["user_id"],)
@@ -1103,7 +1095,6 @@ def request_match(buddy_id):
                 elif year_diff == 2:
                     match_score += 5
         
-        # Create the match request
         conn.execute(
             """INSERT INTO buddy_matches 
             (buddy_id, student_id, status, match_score, created_at) 
@@ -1112,13 +1103,11 @@ def request_match(buddy_id):
         )
         conn.commit()
         
-        # Get buddy name for notification
         buddy = conn.execute(
             "SELECT full_name FROM users WHERE id = ?", 
             (buddy_id,)
         ).fetchone()
         
-        # Create notification for buddy
         conn.execute(
             """INSERT INTO notifications 
             (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
@@ -1130,7 +1119,6 @@ def request_match(buddy_id):
              "buddy_match",
              conn.execute("SELECT last_insert_rowid()").fetchone()[0]))
         
-        # Create notification for admin
         conn.execute(
             """INSERT INTO notifications 
             (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
@@ -1156,14 +1144,12 @@ def request_match(buddy_id):
 
 @app.route("/approve-match/<int:match_id>", methods=["POST"])
 def approve_match(match_id):
-    # Ensure user is logged in and has the role 'buddy'
     if "user_id" not in session or session["role"] != "buddy":
         flash("Unauthorized access", "error")
         return redirect(url_for("login"))
 
     conn = get_db_connection()
     try:
-        # First, check if the match exists
         match = conn.execute(
             "SELECT buddy_id, student_id, status FROM buddy_matches WHERE id = ?", 
             (match_id,)
@@ -1173,12 +1159,10 @@ def approve_match(match_id):
             flash("Match not found", "error")
             return redirect(url_for("buddy_dashboard"))
         
-        # Ensure match is still in 'pending' status
         if match['status'] != 'pending':
             flash("Match has already been approved or declined", "error")
             return redirect(url_for("buddy_dashboard"))
 
-        # Check if the buddy already has 3 active matches
         active_matches = conn.execute(
             "SELECT COUNT(*) FROM buddy_matches WHERE buddy_id = ? AND status = 'active'", 
             (match['buddy_id'],)
@@ -1188,32 +1172,28 @@ def approve_match(match_id):
             flash("You already have 3 active students. Cannot accept more.", "error")
             return redirect(url_for("buddy_dashboard"))
         
-        # Approve the match: Set status to 'active'
         conn.execute(
             "UPDATE buddy_matches SET status = 'active', updated_at = datetime('now') WHERE id = ?", 
             (match_id,)
         )
         
-        # Optionally, you can set the 'admin_approved' column if needed, depending on your logic
         conn.execute(
             "UPDATE buddy_matches SET admin_approved = 1 WHERE id = ?", 
             (match_id,)
         )
         
-        # Get student details for sending a notification
         student = conn.execute(
             "SELECT full_name FROM users WHERE id = ?", 
             (match['student_id'],)
         ).fetchone()
         
-        # Create a notification for the student about the approval
         conn.execute(
             """INSERT INTO notifications 
             (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
             VALUES (?, ?, ?, ?, ?, ?)""",
             (match['student_id'], 
              "Match Approved", 
-             f"Your match request with {session['full_name']} has been approved!",  # You could change this message to be more personalized
+             f"Your match request with {session['full_name']} has been approved!",  
              "match_approved",
              "buddy_match",
              match_id)
@@ -1225,7 +1205,7 @@ def approve_match(match_id):
         return redirect(url_for("buddy_dashboard"))
         
     except Exception as e:
-        conn.rollback()  # Rollback the transaction in case of an error
+        conn.rollback() 
         flash(f"Error approving match: {str(e)}", "error")
         return redirect(url_for("buddy_dashboard"))
     finally:
@@ -1240,19 +1220,16 @@ def reject_match(match_id):
     
     conn = get_db_connection()
     try:
-        # Update match status to declined
         conn.execute(
             "UPDATE buddy_matches SET status = 'declined', updated_at = datetime('now') WHERE id = ?", 
             (match_id,)
         )
         
-        # Get student details for notification
         student = conn.execute(
             "SELECT student_id FROM buddy_matches WHERE id = ?", 
             (match_id,)
         ).fetchone()
         
-        # Create notification for student
         conn.execute(
             """INSERT INTO notifications 
             (user_id, title, message, notification_type, related_entity_type, related_entity_id) 
@@ -1294,7 +1271,7 @@ def admin_approve_match(match_id):
     try:
         print(f"Attempting to approve match with ID: {match_id}")  # Debugging the match ID
         
-        # Approve the match as ADMIN (without 3 matches check)
+
         conn.execute(
             "UPDATE buddy_matches SET admin_approved = 1, updated_at = datetime('now') WHERE id = ?", 
             (match_id,)
@@ -1337,7 +1314,6 @@ def chat(match_id):
         conn.commit()
         flash('Message sent!', 'success')
     
-    # Fetch chat history
     sender_id = session['user_id']
     receiver_id = match['student_id'] if sender_id == match['buddy_id'] else match['buddy_id']
     messages = conn.execute('''
@@ -1350,25 +1326,21 @@ def chat(match_id):
     return render_template('chat.html', match=match, messages=messages)
 
 
-    # Message storage (in a real app, use a database like SQLite/PostgreSQL)
 messages = {}
 
 @app.route('/send_message', methods=['POST'])
 def send_message():
     data = request.get_json()
     
-    # Validate data
     if not all(key in data for key in ['sender_id', 'receiver_id', 'content']):
         return jsonify({'status': 'error', 'message': 'Missing required fields'}), 400
     
-    # Create message object
     message = {
         'sender_id': data['sender_id'],
         'content': data['content'],
         'timestamp': datetime.now().isoformat()
     }
     
-    # Store message (key is combination of user IDs in sorted order)
     chat_key = tuple(sorted([data['sender_id'], data['receiver_id']]))
     
     if chat_key not in messages:
@@ -1381,7 +1353,6 @@ def send_message():
 @app.route('/get_messages', methods=['GET'])
 def get_messages():
     user_id = request.args.get('user_id')
-    # Accept both buddy_id and student_id parameters
     other_id = request.args.get('buddy_id') or request.args.get('student_id')
     
     if not user_id or not other_id:
@@ -1392,7 +1363,6 @@ def get_messages():
     if chat_key not in messages:
         return jsonify({'messages': []})
     
-    # Filter messages for this conversation
     conversation_messages = messages[chat_key]
     
     return jsonify({

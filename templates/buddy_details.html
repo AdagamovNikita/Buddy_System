@@ -49,7 +49,7 @@
         }
 
         .buddy-meta {
-            margin-top: 5px;
+            margin-bottom: 5px;
             opacity: 0.9;
         }
 
@@ -70,7 +70,7 @@
 
         .detail-row {
             display: flex;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
         }
 
         .detail-label {
@@ -91,11 +91,11 @@
             border-radius: 20px;
             font-weight: bold;
             font-size: 1.1em;
-            margin-bottom: 20px;
+            margin-top: 5px;
         }
 
         .bio-text {
-            line-height: 1.6;
+            line-height: 1;
             white-space: pre-line;
         }
 
@@ -115,7 +115,6 @@
         .action-buttons {
             display: flex;
             justify-content: space-between;
-            margin-top: 30px;
             padding-top: 20px;
             border-top: 1px solid #eee;
         }
@@ -178,7 +177,11 @@
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">Languages:</div>
-                        <div class="detail-value">{{ buddy.languages }}</div>
+                        <div class="detail-value">
+                            {% for language in buddy.languages.split(',') %}
+                            <span class="interest-tag">{{ language }}</span>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
 

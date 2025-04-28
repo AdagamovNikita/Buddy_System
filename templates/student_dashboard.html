@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,59 +56,167 @@
             font-size: 0.9em;
         }
 
+        .matches-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
         .match-card {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 15px;
-            border-bottom: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid #871f2d;
+        }
+
+        .match-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         }
 
         .match-info {
             display: flex;
             align-items: center;
+            flex-grow: 1;
         }
 
-        
-            .match-pic {
-            width: 50px;
-            height: 50px;
-            background-color: #ccc;
+        .match-pic {
+            width: 60px;
+            height: 60px;
+            background-color: #f0f0f0;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
             font-weight: bold;
-            margin-right: +15px;
-            color: rgb(133, 0, 0);
+            margin-right: 15px;
+            color: #871f2d;
+            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
         }
-        
+
+        .match-details {
+            flex-grow: 1;
+        }
+
+        .match-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .match-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .match-score {
+            display: inline-flex;
+            align-items: center;
+            background-color: #f8f8f8;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .match-score .score-value {
+            font-weight: 600;
+            color: #871f2d;
+            margin-left: 4px;
+        }
+
+        .match-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .match-actions {
+            display: flex;
+            gap: 10px;
+        }
 
         .select-buddy-btn {
             background-color: #871f2d;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             text-decoration: none;
             font-size: 0.9em;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .select-buddy-btn:hover {
             background-color: #6a1825;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .select-buddy-btn i {
+            font-size: 1.1em;
         }
 
         .message-buddy-btn {
             background-color: #2d873f;
             color: white;
             border: none;
-            padding: 6px 12px;
+            padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 0.8em;
-            margin-left: 10px;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .message-buddy-btn:hover {
+            background-color: #246a34;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .no-matches {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .no-matches-icon {
+            font-size: 2.5em;
+            color: #ccc;
+            margin-bottom: 15px;
         }
 
         .chat-button {
@@ -125,8 +234,14 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             z-index: 1000;
+            transition: all 0.2s;
+        }
+
+        .chat-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
 
         .chat-window {
@@ -137,7 +252,7 @@
             height: 450px;
             background-color: white;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             display: none;
             flex-direction: column;
             overflow: hidden;
@@ -236,14 +351,26 @@
             .dashboard-container {
                 grid-template-columns: 1fr;
             }
-            
+
             .chat-window {
                 width: 280px;
                 height: 400px;
                 right: 10px;
             }
+
+            .match-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .match-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
@@ -272,11 +399,11 @@
                         <h4>My Interests</h4>
                         <div class="interests-list">
                             {% if user_details and user_details.interests %}
-                                {% for interest in user_details.interests.split(',') %}
-                                <span class="interest-tag">{{ interest }}</span>
-                                {% endfor %}
+                            {% for interest in user_details.interests.split(',') %}
+                            <span class="interest-tag">{{ interest }}</span>
+                            {% endfor %}
                             {% else %}
-                                <p>No interests specified</p>
+                            <p>No interests specified</p>
                             {% endif %}
                         </div>
                     </div>
@@ -285,45 +412,67 @@
 
             <div class="right-column">
                 <div class="matches-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <h2>Your Buddy Matches</h2>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>Your Buddy</h2>
                         {% if not pending_request %}
-                        <a href="{{ url_for('view_potential_matches') }}" class="select-buddy-btn">Select Buddy</a>
+                        <a href="{{ url_for('view_potential_matches') }}" class="select-buddy-btn">
+                            <i class="fas fa-user-plus"></i> Find New Buddy
+                        </a>
                         {% endif %}
                     </div>
+
                     {% if matches %}
+                    <div class="matches-container">
                         {% for match in matches %}
                         <div class="match-card">
                             <div class="match-info">
                                 <div class="match-pic">{{ match.buddy_name[0] }}</div>
-                                <div>
-                                    <h4>{{ match.buddy_name }}</h4>
-                                    <p>Status: {{ match.status }}</p>
+                                <div class="match-details">
+                                    <div class="match-name">{{ match.buddy_name }}</div>
+                                    <div class="match-meta">
+                                        <span class="match-score">
+                                            Match: <span class="score-value">{{ match.match_score }}%</span>
+                                        </span>
+                                        <span class="match-status status-{{ match.status.lower() }}">
+                                            {{ match.status }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            {% if match.status == 'approved' %}
-                            <button class="message-buddy-btn" onclick="openChatWithBuddy('{{ match.buddy_id }}', '{{ match.buddy_name }}')">
-                                Message
-                            </button>
-                            {% endif %}
+                            <div class="match-actions">
+                                {% if match.status == 'approved' %}
+                                <button class="message-buddy-btn"
+                                    onclick="openChatWithBuddy('{{ match.buddy_id }}', '{{ match.buddy_name }}')">
+                                    <i class="fas fa-comment-dots"></i> Message
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
                         {% endfor %}
+                    </div>
                     {% else %}
-                        <p>You don't have any matches yet.</p>
+                    <div class="no-matches">
+                        <div class="no-matches-icon">
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                        <h3>No Buddy Matches Yet</h3>
+                        <p>You don't have any matches yet. Click "Find New Buddy" to get started!</p>
+                    </div>
                     {% endif %}
                 </div>
 
                 <div class="events-card">
                     <h2>Upcoming Events</h2>
                     {% if events %}
-                        {% for event in events %}
-                        <div class="event-card">
-                            <h4>{{ event.title }}</h4>
-                            <p>{{ event.formatted_start_time }} - {{ event.event_type }}</p>
-                        </div>
-                        {% endfor %}
+                    {% for event in events %}
+                    <div class="event-card">
+                        <h4>{{ event.title }}</h4>
+                        <p>{{ event.formatted_start_time }} - {{ event.event_type }}</p>
+                    </div>
+                    {% endfor %}
                     {% else %}
-                        <p>No upcoming events.</p>
+                    <p>No upcoming events.</p>
                     {% endif %}
                 </div>
 
@@ -366,24 +515,24 @@
             <span id="chatTitle">Buddy Chat</span>
             <span style="cursor:pointer;" onclick="toggleChat()">✖</span>
         </div>
-        
+
         <div class="chat-buddy-selector">
             <select id="buddySelector" onchange="loadChat(this.value)">
                 <option value="">Select a buddy to chat with...</option>
                 {% if approved_matches %}
-                    {% for match in approved_matches %}
-                    <option value="{{ match.buddy_id }}">{{ match.buddy_name }}</option>
-                    {% endfor %}
+                {% for match in approved_matches %}
+                <option value="{{ match.buddy_id }}">{{ match.buddy_name }}</option>
+                {% endfor %}
                 {% endif %}
             </select>
         </div>
-        
+
         <div class="chat-messages" id="chatMessages">
             <div class="no-chat-selected">
                 <p>Please select a buddy to start chatting</p>
             </div>
         </div>
-        
+
         <div class="chat-input" id="chatInputContainer" style="display:none;">
             <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
             <button onclick="sendMessage()">Send</button>
@@ -395,11 +544,11 @@
         let currentBuddyId = null;
         let currentBuddyName = null;
         let chatRefreshInterval = null;
-        
+
         function toggleChat() {
             const chatWindow = document.getElementById('chatWindow');
             chatWindow.style.display = chatWindow.style.display === "flex" ? "none" : "flex";
-            
+
             if (chatWindow.style.display === "flex") {
                 startMessageRefresh();
             } else {
@@ -407,56 +556,56 @@
                 resetChat();
             }
         }
-        
+
         function startMessageRefresh() {
             if (chatRefreshInterval) clearInterval(chatRefreshInterval);
             chatRefreshInterval = setInterval(() => {
                 if (currentBuddyId) {
-                    loadChat(currentBuddyId, currentBuddyName, true); 
+                    loadChat(currentBuddyId, currentBuddyName, true);
                 }
-            }, 3000); 
+            }, 3000);
         }
-        
+
         function stopMessageRefresh() {
             if (chatRefreshInterval) clearInterval(chatRefreshInterval);
             chatRefreshInterval = null;
         }
-        
+
         function openChatWithBuddy(buddyId, buddyName) {
             toggleChat();
             document.getElementById('buddySelector').value = buddyId;
             loadChat(buddyId, buddyName);
         }
-        
+
         async function loadChat(buddyId, buddyName = null, silent = false) {
             const chatMessages = document.getElementById('chatMessages');
             const chatInputContainer = document.getElementById('chatInputContainer');
-            
+
             if (!buddyId) {
                 resetChat();
                 return;
             }
-            
+
             currentBuddyId = buddyId;
             currentBuddyName = buddyName || document.getElementById('buddySelector').options[document.getElementById('buddySelector').selectedIndex].text;
-            
+
             if (!silent) {
                 document.getElementById('chatTitle').textContent = `Chat with ${currentBuddyName}`;
                 chatInputContainer.style.display = "flex";
-                
+
                 chatMessages.innerHTML = '<div class="no-chat-selected"><p>Loading messages...</p></div>';
             }
-            
+
             try {
                 const response = await fetch(`/get_messages?user_id=${sessionUserId}&buddy_id=${buddyId}`);
                 const data = await response.json();
-                
+
                 if (data.status === 'success') {
                     const processedMessages = data.messages.map(msg => ({
                         ...msg,
                         sender: msg.sender_id === sessionUserId ? 'you' : 'buddy'
                     }));
-                    
+
                     displayMessages(processedMessages);
                 } else if (!silent) {
                     chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages</p></div>';
@@ -468,46 +617,46 @@
                 }
             }
         }
-        
+
         function displayMessages(messages) {
             const chatMessages = document.getElementById('chatMessages');
-            
+
             if (messages.length === 0) {
                 if (!chatRefreshInterval) {
                     chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages yet. Start the conversation!</p></div>';
                 }
                 return;
             }
-            
+
             const tempContainer = document.createElement('div');
-            
+
             messages.forEach(msg => {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = msg.sender === 'you' ? 'message your-message' : 'message buddy-message';
-                
+
                 messageDiv.innerHTML = `
                     <div>${msg.content}</div>
                     <div class="message-time">${formatTime(msg.timestamp)}</div>
                     ${msg.status ? `<div class="message-status">${msg.status}</div>` : ''}
                 `;
-                
+
                 tempContainer.appendChild(messageDiv);
             });
-            
+
             chatMessages.innerHTML = '';
             chatMessages.appendChild(tempContainer);
-            
+
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-        
+
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
-            
+
             if (!message || !currentBuddyId) return;
-            
+
             const chatMessages = document.getElementById('chatMessages');
-            
+
             const tempId = 'temp-' + Date.now();
             const messageDiv = document.createElement('div');
             messageDiv.id = tempId;
@@ -516,15 +665,15 @@
                 <div>${message}</div>
                 <div class="message-time">Sending...</div>
             `;
-            
+
             if (chatMessages.querySelector('.no-chat-selected')) {
                 chatMessages.innerHTML = '';
             }
-            
+
             chatMessages.appendChild(messageDiv);
             input.value = '';
             chatMessages.scrollTop = chatMessages.scrollHeight;
-            
+
             try {
                 const response = await fetch('/send_message', {
                     method: 'POST',
@@ -537,15 +686,15 @@
                         content: message
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.status === 'success') {
                     messageDiv.innerHTML = `
                         <div>${message}</div>
                         <div class="message-time">${formatTime(result.timestamp)}</div>
                     `;
-                    
+
                     loadChat(currentBuddyId, currentBuddyName, true);
                 } else {
                     messageDiv.innerHTML = `
@@ -561,7 +710,7 @@
                 `;
             }
         }
-        
+
         function resetChat() {
             currentBuddyId = null;
             currentBuddyName = null;
@@ -570,27 +719,28 @@
             document.getElementById('chatMessages').innerHTML = '<div class="no-chat-selected"><p>Please select a buddy to start chatting</p></div>';
             document.getElementById('chatInputContainer').style.display = 'none';
         }
-        
+
         function formatTime(timestamp) {
             const date = new Date(timestamp);
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
-        
+
         function handleKeyPress(e) {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         }
-        
-        document.addEventListener('DOMContentLoaded', function() {
+
+        document.addEventListener('DOMContentLoaded', function () {
             const urlParams = new URLSearchParams(window.location.search);
             const buddyId = urlParams.get('open_chat');
             const buddyName = urlParams.get('buddy_name');
-            
+
             if (buddyId && buddyName) {
                 openChatWithBuddy(buddyId, buddyName);
             }
         });
     </script>
 </body>
+
 </html>

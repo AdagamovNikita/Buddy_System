@@ -240,6 +240,15 @@ DUMMY_STUDENT_DATA = [
         "academic_year": 3,
         "email": "nsa00@aubmed.ac.cy",
     },
+    {
+        "full_name": "Sam Dibeh",
+        "student_id": "100000041",
+        "age": 20,
+        "gender": "male",
+        "major": "Computer Science",
+        "academic_year": 2,
+        "email": "sdi00@aubmed.ac.cy",
+    },
 ]
 
 
@@ -952,7 +961,7 @@ def student_dashboard():
                WHERE is_public = 1 AND start_time > datetime('now')
                ORDER BY start_time LIMIT 5"""
         ).fetchall()
-        
+
         pending_request = conn.execute(
             "SELECT 1 FROM buddy_matches WHERE student_id = ?",
             (session["user_id"],)

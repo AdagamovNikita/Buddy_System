@@ -287,7 +287,9 @@
                 <div class="matches-card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <h2>Your Buddy Matches</h2>
+                        {% if not pending_request %}
                         <a href="{{ url_for('view_potential_matches') }}" class="select-buddy-btn">Select Buddy</a>
+                        {% endif %}
                     </div>
                     {% if matches %}
                         {% for match in matches %}

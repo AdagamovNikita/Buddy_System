@@ -952,6 +952,11 @@ def student_dashboard():
                WHERE is_public = 1 AND start_time > datetime('now')
                ORDER BY start_time LIMIT 5"""
         ).fetchall()
+        
+        pending_request = conn.execute(
+            "SELECT 1 FROM buddy_matches WHERE student_id = ?",
+            (session["user_id"],)
+        ).fetchone()
 
         return render_template(
             "student_dashboard.html",
@@ -961,6 +966,7 @@ def student_dashboard():
             pending_matches=pending_matches,
             events=events,
             approved_matches=approved_matches,
+            pending_request=pending_request,
         )
     finally:
         conn.close()
@@ -1050,22 +1056,25 @@ def view_potential_matches():
         flash("Please login as a student to view matches", "warning")
         return redirect(url_for("login"))
 
-    major_filter = request.args.get("major", "")
-    language_filter = request.args.get("language", "")
-    year_filter = request.args.get("year", "")
-    gender_filter = request.args.get("gender", "")
-    matches = get_potential_buddies(
-        session["user_id"],
-        major_filter=major_filter if major_filter else None,
-        language_filter=language_filter if language_filter else None,
-        year_filter=year_filter if year_filter else None,
-        gender_filter=gender_filter if gender_filter else None,
-    )
+    conn = get_db_connection()
+    try:
+        major_filter = request.args.get("major", "")
+        language_filter = request.args.get("language", "")
+        year_filter = request.args.get("year", "")
+        gender_filter = request.args.get("gender", "")
+        matches = get_potential_buddies(
+            session["user_id"],
+            major_filter=major_filter if major_filter else None,
+            language_filter=language_filter if language_filter else None,
+            year_filter=year_filter if year_filter else None,
+            gender_filter=gender_filter if gender_filter else None,
+        )
 
-    return render_template(
-        "potential_matches.html", matches=matches, full_name=session["full_name"]
-    )
-
+        return render_template(
+            "potential_matches.html", matches=matches, full_name=session["full_name"]
+        )
+    finally:
+        conn.close()
 
 @app.route("/buddy-details/<int:buddy_id>")
 def buddy_details(buddy_id):
@@ -1093,19 +1102,32 @@ def buddy_details(buddy_id):
 
         match_score = 0
         if student_details:
-            if student_details["major"] == buddy["major"]:
-                match_score += 30
+            if student_details["major"] and buddy["major"]:
+                if student_details["major"] == buddy["major"]:
+                    match_score += 30
             if student_details["languages"] and buddy["languages"]:
-                student_langs = set(
+                student_langs = [
                     lang.strip().lower()
                     for lang in student_details["languages"].split(",")
-                )
-                buddy_langs = set(
+                ]
+                buddy_langs = [
                     lang.strip().lower() for lang in buddy["languages"].split(",")
-                )
-                common_langs = student_langs.intersection(buddy_langs)
+                ]
+                if student_langs[0] == buddy_langs[0]:
+                    match_score += 15
+                common_langs = set(student_langs).intersection(buddy_langs)
                 if common_langs:
-                    match_score += min(20, len(common_langs) * 5)
+                    match_score += min(10, len(common_langs) * 2)
+            if student_details["academic_year"] and buddy["academic_year"]:
+                year_diff = abs(
+                    student_details["academic_year"] - buddy["academic_year"]
+                )
+                if year_diff == 0:
+                    match_score += 20
+                elif year_diff == 1:
+                    match_score += 15
+                elif year_diff == 2:
+                    match_score += 5
             if student_details["interests"] and buddy["interests"]:
                 student_interests = set(
                     i.strip().lower() for i in student_details["interests"].split(",")
@@ -1115,15 +1137,15 @@ def buddy_details(buddy_id):
                 )
                 common_interests = student_interests.intersection(buddy_interests)
                 if common_interests:
-                    match_score += min(20, len(common_interests) * 4)
-            if student_details["academic_year"] and buddy["academic_year"]:
-                year_diff = abs(
-                    student_details["academic_year"] - buddy["academic_year"]
-                )
-                if year_diff == 1:
-                    match_score += 10
-                elif year_diff == 2:
-                    match_score += 5
+                    match_score += min(20, len(common_interests) * 5)
+            active_matches = conn.execute(
+                "SELECT COUNT(*) FROM buddy_matches WHERE buddy_id = ? AND status = 'active'",
+                (buddy_id,)
+            ).fetchone()[0]
+            if active_matches < 2:
+                match_score += 10 - (active_matches * 5)
+            
+            match_score = max(0, min(100, match_score))
 
         return render_template(
             "buddy_details.html",
@@ -1134,7 +1156,6 @@ def buddy_details(buddy_id):
     finally:
         conn.close()
 
-
 @app.route("/request-match/<int:buddy_id>", methods=["POST"])
 def request_match(buddy_id):
     if "user_id" not in session or session["role"] != "student":
@@ -1143,22 +1164,14 @@ def request_match(buddy_id):
 
     conn = get_db_connection()
     try:
-        active_match = conn.execute(
-            "SELECT 1 FROM buddy_matches WHERE student_id = ? AND status = 'active'",
+        existing_match = conn.execute(
+            """SELECT 1 FROM buddy_matches 
+            WHERE student_id = ? AND status IN ('pending', 'active')""",
             (session["user_id"],),
         ).fetchone()
 
-        if active_match:
-            flash("You already have an active buddy", "info")
-            return redirect(url_for("view_potential_matches"))
-
-        existing_request = conn.execute(
-            "SELECT 1 FROM buddy_matches WHERE student_id = ? AND buddy_id = ? AND status = 'pending'",
-            (session["user_id"], buddy_id),
-        ).fetchone()
-
-        if existing_request:
-            flash("You already have a pending request with this buddy", "info")
+        if existing_match:
+            flash("You can only have one active or pending buddy request at a time", "error")
             return redirect(url_for("view_potential_matches"))
 
         buddy_active_matches = conn.execute(
@@ -1183,17 +1196,28 @@ def request_match(buddy_id):
                 if student_details["major"] == buddy_details["major"]:
                     match_score += 30
             if student_details["languages"] and buddy_details["languages"]:
-                student_langs = set(
+                student_langs = [
                     lang.strip().lower()
                     for lang in student_details["languages"].split(",")
-                )
-                buddy_langs = set(
-                    lang.strip().lower()
-                    for lang in buddy_details["languages"].split(",")
-                )
-                common_langs = student_langs.intersection(buddy_langs)
+                ]
+                buddy_langs = [
+                    lang.strip().lower() for lang in buddy_details["languages"].split(",")
+                ]
+                if student_langs[0] == buddy_langs[0]:
+                    match_score += 15
+                common_langs = set(student_langs).intersection(buddy_langs)
                 if common_langs:
-                    match_score += min(20, len(common_langs) * 5)
+                    match_score += min(10, len(common_langs) * 2)
+            if student_details["academic_year"] and buddy_details["academic_year"]:
+                year_diff = abs(
+                    student_details["academic_year"] - buddy_details["academic_year"]
+                )
+                if year_diff == 0:
+                    match_score += 20
+                elif year_diff == 1:
+                    match_score += 15
+                elif year_diff == 2:
+                    match_score += 5
             if student_details["interests"] and buddy_details["interests"]:
                 student_interests = set(
                     i.strip().lower() for i in student_details["interests"].split(",")
@@ -1203,15 +1227,12 @@ def request_match(buddy_id):
                 )
                 common_interests = student_interests.intersection(buddy_interests)
                 if common_interests:
-                    match_score += min(20, len(common_interests) * 4)
-            if student_details["academic_year"] and buddy_details["academic_year"]:
-                year_diff = abs(
-                    student_details["academic_year"] - buddy_details["academic_year"]
-                )
-                if year_diff == 1:
-                    match_score += 10
-                elif year_diff == 2:
-                    match_score += 5
+                    match_score += min(20, len(common_interests) * 5)
+            
+            if buddy_active_matches < 2:
+                match_score += 10 - (buddy_active_matches * 5)
+            
+            match_score = max(0, min(100, match_score))
 
         conn.execute(
             """INSERT INTO buddy_matches 
@@ -1256,7 +1277,7 @@ def request_match(buddy_id):
         conn.commit()
 
         flash(f"Match request sent to {buddy['full_name']}!", "success")
-        return redirect(url_for("view_potential_matches"))
+        return redirect(url_for("student_dashboard"))
 
     except Exception as e:
         conn.rollback()

@@ -1,3 +1,4 @@
+import requests
 from flask import (
     Flask,
     render_template,
@@ -7,14 +8,27 @@ from flask import (
     flash,
     session,
     jsonify,
+    Blueprint,
 )
+import time
+from functools import wraps
+import jwt
+import  base64
 import sqlite3
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
+import secrets
+from urllib.parse import quote
+
+
+ZOOM_CLIENT_ID = "jfB7qv0aQWaKh4XodPswUg"
+ZOOM_CLIENT_SECRET = "aakLlTT2UTLtWx2IdgSei5Uw7dw66Que"
+ZOOM_REDIRECT_URI = "http://localhost:5000/zoom/callback" 
+
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key_here"
-
+notifications_bp = Blueprint('notifications', __name__)
 
 def get_db_connection():
     conn = sqlite3.connect("buddy_system.db")
@@ -578,7 +592,76 @@ def add_admin_approved_column():
     finally:
         conn.close()
 
+def handle_zoom_errors(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": f"Zoom API request failed: {str(e)}"}), 500
+        except Exception as e:
+            return jsonify({"error": f"Server error: {str(e)}"}), 500
+    return wrapper
 
+def refresh_zoom_token():
+    if 'zoom_refresh_token' not in session:
+        return False
+    try:
+        token_url = "https://zoom.us/oauth/token"
+        auth_str = base64.b64encode(f"{ZOOM_CLIENT_ID}:{ZOOM_CLIENT_SECRET}".encode()).decode()
+        
+        response = requests.post(
+            token_url,
+            headers={
+                "Authorization": f"Basic {auth_str}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            data={
+                "grant_type": "refresh_token",
+                "refresh_token": session['zoom_refresh_token']
+            }
+        )
+        
+        if response.status_code == 200:
+            tokens = response.json()
+            session['zoom_access_token'] = tokens['access_token']
+            session['zoom_refresh_token'] = tokens['refresh_token']
+            session['zoom_token_expires'] = time.time() + tokens['expires_in'] - 60
+            return True
+        return False
+    except Exception as e:
+        app.logger.error(f"Token refresh failed: {str(e)}")
+        return False
+    
+zoom_token_cache = {
+    'access_token': None,
+    'expires_at': 0
+}
+
+def verify_zoom_scopes():
+    if 'zoom_access_token' not in session:
+        return False
+        
+    headers = {
+        "Authorization": f"Bearer {session['zoom_access_token']}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        response = requests.get(
+            "https://api.zoom.us/v2/users/me/token",
+            headers=headers,
+            timeout=5
+        )
+        if response.status_code == 200:
+            token_info = response.json()
+            print("Current token scopes:", token_info.get('scope'))
+            return all(scope in token_info.get('scope', '') 
+                   for scope in ['meeting:write:meeting', 'meeting:write:admin'])
+    except Exception as e:
+        print("Scope verification failed:", str(e))
+    
+    return False
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -1412,7 +1495,7 @@ def reject_match(match_id):
 
 @app.route("/admin/approve-match/<int:match_id>", methods=["POST"])
 def admin_approve_match(match_id):
-    print("Session:", dict(session))  # DEBUG HERE
+    print("Session:", dict(session)) 
 
     if "user_id" not in session or not session.get("is_admin"):
         flash("Unauthorized access", "error")
@@ -1422,8 +1505,7 @@ def admin_approve_match(match_id):
     try:
         print(
             f"Attempting to approve match with ID: {match_id}"
-        )  # Debugging the match ID
-
+        ) 
         conn.execute(
             "UPDATE buddy_matches SET admin_approved = 1, updated_at = datetime('now') WHERE id = ?",
             (match_id,),
@@ -1432,14 +1514,13 @@ def admin_approve_match(match_id):
 
         print(
             f"Successfully approved match with ID: {match_id}"
-        )  # Success message in debug
-
+        ) 
         flash("Match approved by admin successfully", "success")
         return redirect(url_for("admin_dashboard"))
 
     except Exception as e:
         conn.rollback()
-        print(f"Error occurred while approving match: {str(e)}")  # Debugging the error
+        print(f"Error occurred while approving match: {str(e)}")  
         flash(f"Error approving match as admin: {str(e)}", "error")
         return redirect(url_for("admin_dashboard"))
 
@@ -1499,42 +1580,545 @@ def send_message():
     if not all(key in data for key in ["sender_id", "receiver_id", "content"]):
         return jsonify({"status": "error", "message": "Missing required fields"}), 400
 
-    message = {
-        "sender_id": data["sender_id"],
-        "content": data["content"],
-        "timestamp": datetime.now().isoformat(),
-    }
-
-    chat_key = tuple(sorted([data["sender_id"], data["receiver_id"]]))
-
-    if chat_key not in messages:
-        messages[chat_key] = []
-
-    messages[chat_key].append(message)
-
-    return jsonify({"status": "success", "message": "Message sent"})
-
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO messages (sender_id, receiver_id, content)
+            VALUES (?, ?, ?)
+        ''', (data["sender_id"], data["receiver_id"], data["content"]))
+        
+        cursor.execute('''
+            SELECT full_name FROM users WHERE id = ?
+        ''', (data["sender_id"],))
+        sender = cursor.fetchone()
+        sender_name = sender['full_name'] if sender else "Unknown User"
+        
+        cursor.execute('''
+            INSERT INTO notifications (
+                user_id, 
+                title, 
+                message, 
+                notification_type, 
+                related_entity_type, 
+                related_entity_id
+            ) VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            data["receiver_id"], 
+            "New Message",  
+            f"New message from {sender_name}: {data['content'][:30]}...",
+            "message",  
+            "chat", 
+            data["sender_id"]  
+        ))
+        
+        conn.commit()
+        return jsonify({
+            "status": "success", 
+            "message": "Message sent and notification created"
+        })
+    
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return jsonify({
+            "status": "error", 
+            "message": f"Failed to send message: {str(e)}"
+        }), 500
+    
+    finally:
+        if conn:
+            conn.close()
 
 @app.route("/get_messages", methods=["GET"])
 def get_messages():
     user_id = request.args.get("user_id")
     other_id = request.args.get("buddy_id") or request.args.get("student_id")
-
+    
     if not user_id or not other_id:
-        return (
-            jsonify({"status": "error", "message": "Missing user or chat partner ID"}),
-            400,
+        return jsonify({"status": "error", "message": "Missing user IDs"}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT 
+                id,
+                sender_id,
+                receiver_id,
+                content,
+                is_read,
+                strftime('%Y-%m-%dT%H:%M:%SZ', sent_at) as timestamp
+            FROM messages
+            WHERE (sender_id = ? AND receiver_id = ?)
+            OR (sender_id = ? AND receiver_id = ?)
+            ORDER BY sent_at ASC
+        ''', (user_id, other_id, other_id, user_id))
+        
+        messages = []
+        for row in cursor.fetchall():
+            msg = dict(row)
+            msg['sender'] = 'you' if str(msg['sender_id']) == str(user_id) else 'buddy'
+            msg['status'] = 'read' if msg['is_read'] else 'delivered'
+            messages.append(msg)
+        
+        return jsonify({"status": "success", "messages": messages})
+    
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
+
+@notifications_bp.route('/notifications')
+def get_notifications():
+    user_id = request.args.get('user_id')
+    limit = request.args.get('limit', 10, type=int)
+    unread_only = request.args.get('unread_only', 'false').lower() == 'true'
+    
+    if not user_id:
+        return jsonify({"error": "user_id is required"}), 400
+    
+    try:
+        conn = get_db_connection()
+        query = "SELECT * FROM notifications WHERE user_id = ?"
+        params = [user_id]
+        
+        if unread_only:
+            query += " AND is_read = FALSE"
+        
+        query += " ORDER BY created_at DESC LIMIT ?"
+        params.append(limit)
+        
+        notifications = conn.execute(query, params).fetchall()
+        notifications_list = [dict(notification) for notification in notifications]
+        return jsonify(notifications_list)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
+@notifications_bp.route('/notifications/mark-read', methods=['POST'])
+def mark_notification_read():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+        
+    notification_id = data.get('notification_id')
+    user_id = data.get('user_id')
+    
+    if not notification_id or not user_id:
+        return jsonify({"error": "notification_id and user_id are required"}), 400
+    
+    try:
+        conn = get_db_connection()
+        result = conn.execute(
+            "UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?", 
+            (notification_id, user_id)
         )
+        conn.commit()
+        
+        if result.rowcount == 0:
+            return jsonify({"error": "Notification not found or already marked as read"}), 404
+            
+        return jsonify({"status": "success"})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
-    chat_key = tuple(sorted([user_id, other_id]))
+@notifications_bp.route('/notifications/mark-all-read', methods=['POST'])
+def mark_all_notifications_read():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+        
+    user_id = data.get('user_id')
+    
+    if not user_id:
+        return jsonify({"error": "user_id is required"}), 400
+    
+    try:
+        conn = get_db_connection()
+        conn.execute(
+            "UPDATE notifications SET is_read = TRUE WHERE user_id = ?", 
+            (user_id,)
+        )
+        conn.commit()
+        return jsonify({"status": "success"})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
-    if chat_key not in messages:
-        return jsonify({"messages": []})
+@notifications_bp.route('/notifications/count')
+def get_unread_count():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"error": "user_id is required"}), 400
+    
+    try:
+        conn = get_db_connection()
+        count = conn.execute(
+            "SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = FALSE", 
+            (user_id,)
+        ).fetchone()[0]
+        return jsonify({"count": count})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
-    conversation_messages = messages[chat_key]
+def create_notification(user_id, title, message, notification_type, related_entity_type=None, related_entity_id=None):
+    try:
+        conn = get_db_connection()
+        conn.execute(
+            "INSERT INTO notifications (user_id, title, message, notification_type, related_entity_type, related_entity_id) VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, title, message, notification_type, related_entity_type, related_entity_id)
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"Error creating notification: {str(e)}")
+        raise
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
-    return jsonify({"messages": conversation_messages, "status": "success"})
+app.register_blueprint(notifications_bp, url_prefix='/api')
+@app.route('/zoom/meetings')
+def zoom_meetings():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    zoom_connected = 'zoom_access_token' in session
+    meetings = []
+    students = []
+    
+    conn = get_db_connection()
+    try:
+        if session.get('role') == 'buddy':
+            students = [dict(row) for row in conn.execute('''
+                SELECT u.id, u.full_name 
+                FROM users u
+                WHERE u.role = 'student' 
+                AND u.is_approved = 1
+                ORDER BY u.full_name
+            ''').fetchall()]
+            
+        elif session.get('role') == 'student':
+            students = [dict(row) for row in conn.execute('''
+                SELECT u.id, u.full_name 
+                FROM users u
+                WHERE u.role = 'buddy' 
+                AND u.is_approved = 1
+                ORDER BY u.full_name
+            ''').fetchall()]
+            
+        print(f"Found {len(students)} {'students' if session.get('role') == 'buddy' else 'buddies'}")
+        for student in students:
+            print(student)
+            
+    except Exception as e:
+        flash(f"Error loading available matches: {str(e)}", "error")
+        print(f"Database error: {str(e)}")
+    finally:
+        conn.close()
+    
+    if zoom_connected:
+        try:
+            headers = {
+                "Authorization": f"Bearer {session['zoom_access_token']}",
+                "Content-Type": "application/json"
+            }
+            
+            response = requests.get(
+                "https://api.zoom.us/v2/users/me/meetings?type=upcoming&page_size=10",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                meetings = response.json().get('meetings', [])
+            else:
+                flash("Failed to fetch Zoom meetings", "error")
+                if response.status_code == 401: 
+                    session.pop('zoom_access_token', None)
+                    return redirect(url_for('zoom_meetings'))
+                
+        except Exception as e:
+            flash(f"Error fetching meetings: {str(e)}", "error")
+    
+    return render_template(
+        'zoom_meetings.html',
+        zoom_connected=zoom_connected,
+        meetings=meetings,
+        students=students  
+    )
+def generate_zoom_jwt():
+    payload = {
+        "iss": ZOOM_CLIENT_ID,
+        "exp": int(time.time()) + 3600
+    }
+    return jwt.encode(payload, ZOOM_CLIENT_SECRET, algorithm='HS256')
+    
+@app.route('/get_meetings', methods=['GET'])
+@handle_zoom_errors
+def get_meetings():
+    print("Current session:", dict(session))  
+    if 'zoom_access_token' not in session:
+        print("Zoom access token missing from session")  
+        return jsonify({"error": "Zoom not connected"}), 401
+    if 'zoom_access_token' not in session:
+        return jsonify({"error": "Zoom not connected"}), 401
+    
+    if time.time() > session.get('zoom_token_expires', 0):
+        if not refresh_zoom_token():
+            return jsonify({"error": "Zoom session expired"}), 401
+        
+    if 'zoom_access_token' not in session:
+        return jsonify({"error": "Zoom not connected. Please authorize first."}), 401
 
+    try:
+        headers = {
+            "Authorization": f"Bearer {session['zoom_access_token']}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            "https://api.zoom.us/v2/users/me/meetings?type=upcoming&page_size=30",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            meetings = response.json().get('meetings', [])
+            return jsonify({
+                "status": "success",
+                "meetings": meetings,
+                "count": len(meetings)
+            })
+        else:
+            error_msg = response.json().get('message', 'Unknown error')
+            return jsonify({
+                "error": "Failed to fetch meetings",
+                "zoom_error": error_msg
+            }), response.status_code
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+import secrets
+
+@app.route('/zoom/authorize')
+def zoom_authorize():
+    state_token = secrets.token_urlsafe(32)
+    session['zoom_oauth_state'] = state_token
+    session.modified = True 
+    
+    params = {
+        "response_type": "code",
+        "client_id": ZOOM_CLIENT_ID,
+        "redirect_uri": quote(ZOOM_REDIRECT_URI, safe=''),
+        "state": state_token
+    }
+    
+    auth_url = "https://zoom.us/oauth/authorize?" + "&".join(
+        f"{k}={v}" for k, v in params.items()
+    )
+    return redirect(auth_url)
+
+@app.route('/zoom/callback')
+def zoom_callback():
+    app.logger.debug(f"Received state: {request.args.get('state')}")
+    app.logger.debug(f"Session state: {session.get('zoom_oauth_state')}")
+    
+    if not request.args.get('state'):
+        app.logger.error("Missing state parameter in callback")
+        flash("Authentication failed: missing state parameter", "error")
+        return redirect(url_for('zoom_meetings'))
+    
+    stored_state = session.pop('zoom_oauth_state', None)
+    if not stored_state or request.args.get('state') != stored_state:
+        app.logger.error(f"State mismatch: stored={stored_state}, received={request.args.get('state')}")
+        flash("Security error: invalid state parameter", "error")
+        return redirect(url_for('zoom_meetings'))
+    
+    try:
+        code = request.args.get('code')
+        if not code:
+            flash("Authorization failed: no code received", "error")
+            return redirect(url_for('zoom_meetings'))
+        
+        token_url = "https://zoom.us/oauth/token"
+        auth_str = base64.b64encode(
+            f"{ZOOM_CLIENT_ID}:{ZOOM_CLIENT_SECRET}".encode()
+        ).decode()
+        
+        response = requests.post(
+            token_url,
+            headers={
+                "Authorization": f"Basic {auth_str}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": ZOOM_REDIRECT_URI
+            }
+        )
+        
+        if response.status_code == 200:
+            tokens = response.json()
+            session['zoom_access_token'] = tokens['access_token']
+            session['zoom_refresh_token'] = tokens['refresh_token']
+            session['zoom_token_expires'] = time.time() + tokens['expires_in'] - 60  
+        else:
+            error_msg = response.json().get('message', 'Unknown error')
+            flash(f"Failed to connect to Zoom: {error_msg}", "error")
+        
+    except Exception as e:
+        flash(f"Error during Zoom authentication: {str(e)}", "error")
+    
+    return redirect(url_for('zoom_meetings'))
+
+@app.route('/buddy/zoom_meetings.html')
+def buddy_zoom_meetings():
+    return redirect(url_for('zoom_meetings'))
+
+@app.route('/student/zoom_meetings.html')
+def student_zoom_meetings():
+    return redirect(url_for('zoom_meetings'))
+
+
+@app.route('/zoom/disconnect')
+def zoom_disconnect():
+    session.pop('zoom_access_token', None)
+    session.pop('zoom_refresh_token', None)
+    flash("Disconnected from Zoom", "success")
+    return redirect(url_for('zoom_meetings'))
+
+@app.route('/create_meeting', methods=['POST'])
+def create_meeting():
+    if not verify_zoom_scopes():
+        return jsonify({"error": "Missing required Zoom scopes"}), 403
+        
+    try:
+        data = request.get_json()
+        headers = {
+            "Authorization": f"Bearer {session['zoom_access_token']}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "topic": data.get('title', "Buddy System Meeting"),
+            "type": 2,  
+            "start_time": data.get('time', datetime.utcnow().isoformat()),
+            "duration": data.get('duration', 60),
+            "timezone": "UTC",
+            "settings": {
+                "host_video": True,
+                "participant_video": True,
+                "join_before_host": False,
+                "waiting_room": True
+            }
+        }
+        
+        response = requests.post(
+            "https://api.zoom.us/v2/users/me/meetings",
+            headers=headers,
+            json=payload,
+            timeout=10
+        )
+        
+        if response.status_code == 201:
+            return jsonify(response.json())
+        else:
+            error = response.json()
+            return jsonify({"error": error.get('message', 'Unknown error')}), response.status_code
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.template_filter('datetimeformat')
+def datetimeformat(value, format='%Y-%m-%d %H:%M'):
+    if isinstance(value, str):
+        value = datetime.fromisoformat(value)
+    return value.strftime(format)
+
+@app.route('/your-route')
+def your_route():
+    conn = get_db_connection()
+    user_id = session.get('user_id')
+    
+    try:
+        if session.get('role') == 'buddy':
+            students = conn.execute('''
+                SELECT u.id, u.full_name 
+                FROM users u
+                LEFT JOIN buddy_matches bm ON 
+                    (bm.student_id = u.id AND bm.buddy_id = ? AND bm.status IN ('active', 'pending'))
+                WHERE u.role = 'student' 
+                AND u.is_approved = 1
+                AND bm.id IS NULL
+                ORDER BY u.full_name
+            ''', (user_id,)).fetchall()
+            
+            print(f"Found {len(students)} available students") 
+            
+        elif session.get('role') == 'student':
+            students = conn.execute('''
+                SELECT u.id, u.full_name 
+                FROM users u
+                LEFT JOIN buddy_matches bm ON 
+                    (bm.buddy_id = u.id AND bm.student_id = ? AND bm.status IN ('active', 'pending'))
+                WHERE u.role = 'buddy' 
+                AND u.is_approved = 1
+                AND bm.id IS NULL
+                ORDER BY u.full_name
+            ''', (user_id,)).fetchall()
+            
+            print(f"Found {len(students)} available buddies")  
+        else:
+            students = []
+            
+    except Exception as e:
+        print(f"Database error: {str(e)}")
+        students = []
+    finally:
+        conn.close()
+    
+    return render_template('your_template.html', students=students)
+
+@app.route('/debug/users')
+def debug_users():
+    conn = get_db_connection()
+    try:
+        students = [dict(row) for row in conn.execute(
+            "SELECT id, full_name FROM users WHERE role = 'student' AND is_approved = 1"
+        ).fetchall()]
+        
+        buddies = [dict(row) for row in conn.execute(
+            "SELECT id, full_name FROM users WHERE role = 'buddy' AND is_approved = 1"
+        ).fetchall()]
+        
+        return jsonify({
+            'students': students,
+            'buddies': buddies,
+            'total_students': len(students),
+            'total_buddies': len(buddies)
+        })
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     if not os.path.exists("buddy_system.db"):

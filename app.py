@@ -21,8 +21,8 @@ import secrets
 from urllib.parse import quote
 
 
-ZOOM_CLIENT_ID = "jfB7qv0aQWaKh4XodPswUg"
-ZOOM_CLIENT_SECRET = "aakLlTT2UTLtWx2IdgSei5Uw7dw66Que"
+ZOOM_CLIENT_ID = "kulGkNESTzGiFgzEBko4sA"
+ZOOM_CLIENT_SECRET = "8MVHW1JRw902K0j25d9GAXtjM8caILQj"
 ZOOM_REDIRECT_URI = "http://localhost:5000/zoom/callback" 
 
 

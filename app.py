@@ -21,9 +21,9 @@ import secrets
 from urllib.parse import quote
 
 
-ZOOM_CLIENT_ID = "kulGkNESTzGiFgzEBko4sA"
-ZOOM_CLIENT_SECRET = "8MVHW1JRw902K0j25d9GAXtjM8caILQj"
-ZOOM_REDIRECT_URI = "http://localhost:5000/zoom/callback" 
+ZOOM_CLIENT_ID = "hF9Yjtf0SoKIzH4AjorseQ"
+ZOOM_CLIENT_SECRET = "1NbCq7XgEhkodaEouTCYCTdQ3ZQPQLI2"
+ZOOM_REDIRECT_URI = "http://127.0.0.1:5000/zoom/callback" 
 
 
 app = Flask(__name__)

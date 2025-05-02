@@ -10,6 +10,7 @@ from flask import (
     jsonify,
     Blueprint,
 )
+import jwt
 import time
 from functools import wraps
 import  base64
@@ -33,6 +34,13 @@ def get_db_connection():
     conn = sqlite3.connect("buddy_system.db")
     conn.row_factory = sqlite3.Row
     return conn
+    
+def generate_zoom_jwt():
+     payload = {
+         "iss": ZOOM_CLIENT_ID,
+         "exp": int(time.time()) + 3600
+     }
+     return jwt.encode(payload, ZOOM_CLIENT_SECRET, algorithm='HS256')
 
 
 # ignore the majors for now. all of them say bachelor of science regardless of the major, this is just from the dummy data and is not an error with the database or

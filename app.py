@@ -12,7 +12,6 @@ from flask import (
 )
 import time
 from functools import wraps
-import jwt
 import  base64
 import sqlite3
 import os
@@ -1864,13 +1863,6 @@ def zoom_meetings():
         meetings=meetings,
         students=students  
     )
-def generate_zoom_jwt():
-    payload = {
-        "iss": ZOOM_CLIENT_ID,
-        "exp": int(time.time()) + 3600
-    }
-    return jwt.encode(payload, ZOOM_CLIENT_SECRET, algorithm='HS256')
-    
 @app.route('/get_meetings', methods=['GET'])
 @handle_zoom_errors
 def get_meetings():

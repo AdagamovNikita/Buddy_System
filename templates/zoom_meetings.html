@@ -604,7 +604,10 @@
             try {
                 const response = await fetch('/create_meeting', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         title: document.getElementById('meetingTitle').value,
                         time: document.getElementById('meetingTime').value,
@@ -614,16 +617,21 @@
                 });
 
                 const result = await response.json();
-
+                
                 if (!response.ok) {
-                    throw new Error(result.error || 'Failed to create meeting');
+                    throw new Error(result.error || result.zoom_error || 'Failed to create meeting');
                 }
 
                 showToast('Meeting created successfully!', 'success');
                 toggleModal('createMeetingModal', false);
                 loadMeetings();
+                
+                if (result.join_url) {
+                    window.open(result.join_url, '_blank');
+                }
             } catch (error) {
                 showToast(`Error: ${error.message}`, 'error');
+                console.error('Meeting creation error:', error);
             } finally {
                 btn.disabled = false;
                 document.getElementById('createSpinner').style.display = 'none';

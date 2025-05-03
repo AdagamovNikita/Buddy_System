@@ -16,19 +16,19 @@ from functools import wraps
 import  base64
 import sqlite3
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import secrets
-from urllib.parse import quote
-
+from urllib.parse import quote, urlencode
 
 ZOOM_CLIENT_ID = "hF9Yjtf0SoKIzH4AjorseQ"
 ZOOM_CLIENT_SECRET = "1NbCq7XgEhkodaEouTCYCTdQ3ZQPQLI2"
-ZOOM_REDIRECT_URI = "http://127.0.0.1:5000/zoom/callback" 
-
+ZOOM_REDIRECT_URI = "http://127.0.0.1:5000/zoom/callback"  
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key_here"
 notifications_bp = Blueprint('notifications', __name__)
+
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' #local only
 
 def get_db_connection():
     conn = sqlite3.connect("buddy_system.db")
@@ -613,9 +613,12 @@ def handle_zoom_errors(f):
 def refresh_zoom_token():
     if 'zoom_refresh_token' not in session:
         return False
+    
     try:
         token_url = "https://zoom.us/oauth/token"
-        auth_str = base64.b64encode(f"{ZOOM_CLIENT_ID}:{ZOOM_CLIENT_SECRET}".encode()).decode()
+        auth_str = base64.b64encode(
+            f"{ZOOM_CLIENT_ID}:{ZOOM_CLIENT_SECRET}".encode()
+        ).decode()
         
         response = requests.post(
             token_url,
@@ -626,7 +629,8 @@ def refresh_zoom_token():
             data={
                 "grant_type": "refresh_token",
                 "refresh_token": session['zoom_refresh_token']
-            }
+            },
+            timeout=10
         )
         
         if response.status_code == 200:
@@ -635,16 +639,34 @@ def refresh_zoom_token():
             session['zoom_refresh_token'] = tokens['refresh_token']
             session['zoom_token_expires'] = time.time() + tokens['expires_in'] - 60
             return True
+        
+        # If refresh fails the clear all Zoom tokens
+        session.pop('zoom_access_token', None)
+        session.pop('zoom_refresh_token', None)
+        session.pop('zoom_token_expires', None)
         return False
+        
     except Exception as e:
-        app.logger.error(f"Token refresh failed: {str(e)}")
+        print(f"Token refresh failed: {str(e)}")
         return False
     
 zoom_token_cache = {
     'access_token': None,
     'expires_at': 0
 }
-
+def zoom_token_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'zoom_access_token' not in session:
+            return jsonify({"error": "Zoom not connected"}), 401
+            
+        # Check if token is about to expire range is 5 minutes 
+        if time.time() > session.get('zoom_token_expires', 0) - 300:
+            if not refresh_zoom_token():
+                return jsonify({"error": "Zoom session expired"}), 401
+                
+        return f(*args, **kwargs)
+    return decorated_function
 def verify_zoom_scopes():
     if 'zoom_access_token' not in session:
         return False
@@ -664,7 +686,7 @@ def verify_zoom_scopes():
             token_info = response.json()
             print("Current token scopes:", token_info.get('scope'))
             return all(scope in token_info.get('scope', '') 
-                   for scope in ['meeting:write:meeting', 'meeting:write:admin'])
+                   for scope in ['meeting:write:meeting', 'meeting:read', 'user:read'])
     except Exception as e:
         print("Scope verification failed:", str(e))
     
@@ -1923,41 +1945,29 @@ import secrets
 def zoom_authorize():
     state_token = secrets.token_urlsafe(32)
     session['zoom_oauth_state'] = state_token
-    session.modified = True 
     
     params = {
         "response_type": "code",
         "client_id": ZOOM_CLIENT_ID,
-        "redirect_uri": quote(ZOOM_REDIRECT_URI, safe=''),
-        "state": state_token
+        "redirect_uri": ZOOM_REDIRECT_URI,  
+        "state": state_token,
     }
     
-    auth_url = "https://zoom.us/oauth/authorize?" + "&".join(
-        f"{k}={v}" for k, v in params.items()
-    )
+    auth_url = "https://zoom.us/oauth/authorize?" + urlencode(params)
     return redirect(auth_url)
 
 @app.route('/zoom/callback')
 def zoom_callback():
-    app.logger.debug(f"Received state: {request.args.get('state')}")
-    app.logger.debug(f"Session state: {session.get('zoom_oauth_state')}")
+    if request.args.get('error'):
+        return f"Zoom authorization failed: {request.args.get('error')}"
     
-    if not request.args.get('state'):
-        app.logger.error("Missing state parameter in callback")
-        flash("Authentication failed: missing state parameter", "error")
-        return redirect(url_for('zoom_meetings'))
-    
-    stored_state = session.pop('zoom_oauth_state', None)
-    if not stored_state or request.args.get('state') != stored_state:
-        app.logger.error(f"State mismatch: stored={stored_state}, received={request.args.get('state')}")
-        flash("Security error: invalid state parameter", "error")
-        return redirect(url_for('zoom_meetings'))
+    if request.args.get('state') != session.get('zoom_oauth_state'):
+        return "Invalid state parameter", 400
     
     try:
         code = request.args.get('code')
         if not code:
-            flash("Authorization failed: no code received", "error")
-            return redirect(url_for('zoom_meetings'))
+            return "Authorization code missing", 400
         
         token_url = "https://zoom.us/oauth/token"
         auth_str = base64.b64encode(
@@ -1973,23 +1983,35 @@ def zoom_callback():
             data={
                 "grant_type": "authorization_code",
                 "code": code,
-                "redirect_uri": ZOOM_REDIRECT_URI
-            }
+                "redirect_uri": ZOOM_REDIRECT_URI   
+            },
+            timeout=10
         )
         
         if response.status_code == 200:
             tokens = response.json()
             session['zoom_access_token'] = tokens['access_token']
             session['zoom_refresh_token'] = tokens['refresh_token']
-            session['zoom_token_expires'] = time.time() + tokens['expires_in'] - 60  
+            session['zoom_token_expires'] = time.time() + tokens['expires_in'] - 60
+            
+            verify_response = requests.get(
+                "https://api.zoom.us/v2/users/me",
+                headers={
+                    "Authorization": f"Bearer {tokens['access_token']}",
+                    "Content-Type": "application/json"
+                }
+            )
+            
+            if verify_response.status_code != 200:
+                raise Exception("Token verification failed")
+                
+            return redirect(url_for('zoom_meetings'))
         else:
-            error_msg = response.json().get('message', 'Unknown error')
-            flash(f"Failed to connect to Zoom: {error_msg}", "error")
-        
+            error = response.json()
+            return f"Token exchange failed: {error.get('message', 'Unknown error')}", 400
+            
     except Exception as e:
-        flash(f"Error during Zoom authentication: {str(e)}", "error")
-    
-    return redirect(url_for('zoom_meetings'))
+        return f"Error during OAuth callback: {str(e)}", 500
 
 @app.route('/buddy/zoom_meetings.html')
 def buddy_zoom_meetings():
@@ -2004,14 +2026,17 @@ def student_zoom_meetings():
 def zoom_disconnect():
     session.pop('zoom_access_token', None)
     session.pop('zoom_refresh_token', None)
-    flash("Disconnected from Zoom", "success")
+    session.pop('zoom_token_expires', None)
+    session.pop('zoom_oauth_state', None)
+    flash("Zoom connection has been fully reset", "success")
     return redirect(url_for('zoom_meetings'))
 
 @app.route('/create_meeting', methods=['POST'])
+@zoom_token_required
 def create_meeting():
-    if not verify_zoom_scopes():
-        return jsonify({"error": "Missing required Zoom scopes"}), 403
-        
+    if 'zoom_access_token' not in session:
+        return jsonify({"error": "Zoom not connected"}), 401
+
     try:
         data = request.get_json()
         headers = {
@@ -2019,33 +2044,40 @@ def create_meeting():
             "Content-Type": "application/json"
         }
         
+        # Convert local time to UTC for Zoom API don't change it works.
+        meeting_time = datetime.strptime(data['time'], "%Y-%m-%dT%H:%M")
+        meeting_time_utc = meeting_time.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        
         payload = {
             "topic": data.get('title', "Buddy System Meeting"),
             "type": 2,  
-            "start_time": data.get('time', datetime.utcnow().isoformat()),
+            "start_time": meeting_time_utc,
             "duration": data.get('duration', 60),
             "timezone": "UTC",
             "settings": {
                 "host_video": True,
                 "participant_video": True,
                 "join_before_host": False,
-                "waiting_room": True
+                "waiting_room": True,
+                "auto_recording": "cloud"  
             }
         }
         
         response = requests.post(
             "https://api.zoom.us/v2/users/me/meetings",
             headers=headers,
-            json=payload,
-            timeout=10
+            json=payload
         )
         
-        if response.status_code == 201:
-            return jsonify(response.json())
-        else:
+        if response.status_code != 201:
             error = response.json()
-            return jsonify({"error": error.get('message', 'Unknown error')}), response.status_code
+            return jsonify({
+                "error": "Zoom API error",
+                "zoom_error": error.get('message', 'Unknown error')
+            }), response.status_code
             
+        return jsonify(response.json())
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
@@ -2120,6 +2152,63 @@ def debug_users():
     finally:
         conn.close()
 
+@app.route('/zoom/debug_token')
+def debug_token():
+    if 'zoom_access_token' not in session:
+        return jsonify({"error": "No Zoom token"})
+    
+    headers = {
+        "Authorization": f"Bearer {session['zoom_access_token']}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        token_info = requests.get(
+            "https://api.zoom.us/v2/users/me/token",
+            headers=headers
+        ).json()
+        
+        user_info = requests.get(
+            "https://api.zoom.us/v2/users/me",
+            headers=headers
+        ).json()
+        
+        return jsonify({
+            "token_info": token_info,
+            "user_info": user_info,
+            "scopes": token_info.get('scope', '').split(' ')
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)})
+@app.route('/zoom/debug')
+def zoom_debug():
+    return jsonify({
+        "client_id": ZOOM_CLIENT_ID,
+        "redirect_uri": ZOOM_REDIRECT_URI,
+        "stored_state": session.get('zoom_oauth_state'),
+        "token_exists": 'zoom_access_token' in session,
+        "time": datetime.now().isoformat()
+    })
+
+@app.route('/zoom/check_token')
+def check_token():
+    if 'zoom_access_token' not in session:
+        return jsonify({"error": "No token"}), 401
+    
+    headers = {
+        "Authorization": f"Bearer {session['zoom_access_token']}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        response = requests.get(
+            "https://api.zoom.us/v2/users/me",
+            headers=headers
+        )
+        return jsonify(response.json())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 if __name__ == "__main__":
     if not os.path.exists("buddy_system.db"):
         initialize_db()

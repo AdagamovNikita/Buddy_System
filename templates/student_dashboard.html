@@ -35,6 +35,7 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+
         .dashboard-container {
             display: grid;
             grid-template-columns: 1fr 2fr;
@@ -567,7 +568,7 @@
 
             <div class="right-column">
                 <div class="matches-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div class="matches-header">
                         <h2>Your Buddy</h2>
                         {% if not pending_request %}
                         <a href="{{ url_for('view_potential_matches') }}" class="select-buddy-btn">
@@ -669,7 +670,6 @@
         </div>
     </div>
 
-    <!-- Notification Bell -->
     <div class="notification-container">
         <button class="notification-bell" id="notificationBell">
             <i class="fas fa-bell"></i>
@@ -680,23 +680,19 @@
                 <h3>Notifications</h3>
                 <button id="markAllRead">Mark all as read</button>
             </div>
-            <div class="notification-list" id="notificationList">
-                <!-- Notifications will be loaded here -->
-            </div>
+            <div class="notification-list" id="notificationList"></div>
             <div class="notification-footer">
                 <a href="#">View all notifications</a>
             </div>
         </div>
     </div>
 
-    <!-- Chat Button -->
     <button class="chat-button" onclick="toggleChat()">💬</button>
     <div class="chat-window" id="chatWindow">
         <div class="chat-header">
             <span id="chatTitle">Buddy Chat</span>
-            <span style="cursor:pointer;" onclick="toggleChat()">✖</span>
+            <span onclick="toggleChat()">✖</span>
         </div>
-
         <div class="chat-buddy-selector">
             <select id="buddySelector" onchange="loadChat(this.value)">
                 <option value="">Select a buddy to chat with...</option>
@@ -707,14 +703,12 @@
                 {% endif %}
             </select>
         </div>
-
         <div class="chat-messages" id="chatMessages">
             <div class="no-chat-selected">
                 <p>Please select a buddy to start chatting</p>
             </div>
         </div>
-
-        <div class="chat-input" id="chatInputContainer" style="display:none;">
+        <div class="chat-input" id="chatInputContainer">
             <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
             <button onclick="sendMessage()">Send</button>
         </div>
@@ -729,26 +723,17 @@
         function toggleChat() {
             const chatWindow = document.getElementById('chatWindow');
             chatWindow.style.display = chatWindow.style.display === "flex" ? "none" : "flex";
-
-            if (chatWindow.style.display === "flex") {
-                startMessageRefresh();
-            } else {
-                stopMessageRefresh();
-                resetChat();
-            }
+            chatWindow.style.display === "flex" ? startMessageRefresh() : stopMessageRefresh();
         }
 
         function startMessageRefresh() {
-            if (chatRefreshInterval) clearInterval(chatRefreshInterval);
             chatRefreshInterval = setInterval(() => {
-                if (currentBuddyId) {
-                    loadChat(currentBuddyId, currentBuddyName, true);
-                }
+                currentBuddyId && loadChat(currentBuddyId, currentBuddyName, true);
             }, 3000);
         }
 
         function stopMessageRefresh() {
-            if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+            clearInterval(chatRefreshInterval);
             chatRefreshInterval = null;
         }
 
@@ -759,16 +744,13 @@
         }
 
         async function loadChat(buddyId, buddyName = null, silent = false) {
-            const chatMessages = document.getElementById('chatMessages');
-            const chatInputContainer = document.getElementById('chatInputContainer');
-
-            if (!buddyId) {
-                resetChat();
-                return;
-            }
+            if (!buddyId) return resetChat();
 
             currentBuddyId = buddyId;
             currentBuddyName = buddyName || document.getElementById('buddySelector').options[document.getElementById('buddySelector').selectedIndex].text;
+
+            const chatMessages = document.getElementById('chatMessages');
+            const chatInputContainer = document.getElementById('chatInputContainer');
 
             if (!silent) {
                 document.getElementById('chatTitle').textContent = `Chat with ${currentBuddyName}`;
@@ -781,27 +763,22 @@
                 const data = await response.json();
 
                 if (data.status === 'success') {
-                    const processedMessages = data.messages.map(msg => ({
+                    displayMessages(data.messages.map(msg => ({
                         ...msg,
                         sender: msg.sender_id === sessionUserId ? 'you' : 'buddy'
-                    }));
-
-                    displayMessages(processedMessages);
+                    })));
                 } else if (!silent) {
                     chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages</p></div>';
                 }
             } catch (error) {
                 console.error('Error fetching messages:', error);
-                if (!silent) {
-                    chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages</p></div>';
-                }
+                if (!silent) chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages</p></div>';
             }
         }
 
         function displayMessages(messages) {
             const chatMessages = document.getElementById('chatMessages');
-
-            if (messages.length === 0) {
+            if (!messages.length) {
                 if (!chatRefreshInterval) {
                     chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages yet. Start the conversation!</p></div>';
                 }
@@ -809,18 +786,14 @@
             }
 
             const tempContainer = document.createElement('div');
-
             messages.forEach(msg => {
-                const messageDiv = document.createElement('div');
                 const isCurrentUser = msg.sender === 'you' || msg.sender_id.toString() === sessionUserId;
+                const messageDiv = document.createElement('div');
                 messageDiv.className = isCurrentUser ? 'message your-message' : 'message buddy-message';
-
                 messageDiv.innerHTML = `
                     <div>${msg.content}</div>
                     <div class="message-time">${formatTime(msg.timestamp)}</div>
-                    ${msg.status === 'delivered' ? '<div class="message-status">delivered</div>' : ''}
                 `;
-
                 tempContainer.appendChild(messageDiv);
             });
 
@@ -830,81 +803,50 @@
         }
 
         async function sendMessage() {
-    const input = document.getElementById('chatInput');
-    const message = input.value.trim();
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message || !currentBuddyId) return;
 
-    if (!message || !currentBuddyId) return;
+            const chatMessages = document.getElementById('chatMessages');
+            const tempId = 'temp-' + Date.now();
+            const messageDiv = document.createElement('div');
+            messageDiv.id = tempId;
+            messageDiv.className = 'message your-message';
+            messageDiv.innerHTML = `<div>${message}</div><div class="message-time">Sending...</div>`;
 
-    const chatMessages = document.getElementById('chatMessages');
-    
-    const tempId = 'temp-' + Date.now();
-    const messageDiv = document.createElement('div');
-    messageDiv.id = tempId;
-    messageDiv.className = 'message your-message';
-    messageDiv.innerHTML = `
-        <div>${message}</div>
-        <div class="message-time">Sending...</div>
-    `;
+            if (chatMessages.querySelector('.no-chat-selected')) chatMessages.innerHTML = '';
+            chatMessages.appendChild(messageDiv);
+            input.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    if (chatMessages.querySelector('.no-chat-selected')) {
-        chatMessages.innerHTML = '';
-    }
+            try {
+                const response = await fetch('/send_message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sender_id: sessionUserId,
+                        receiver_id: currentBuddyId,
+                        content: message
+                    })
+                });
 
-    chatMessages.appendChild(messageDiv);
-    input.value = '';
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    try {
-        const response = await fetch('/send_message', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                sender_id: sessionUserId,
-                receiver_id: currentBuddyId,
-                content: message
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status === 'success') {
-            messageDiv.innerHTML = `
-                <div>${message}</div>
-                <div class="message-time">${formatTime(new Date())}</div>
-            `;
-            
-            loadChat(currentBuddyId, currentBuddyName, true);
-            
-            if (result.notification_created) {
-                updateUnreadCount();
+                const result = await response.json();
+                if (result.status === 'success') {
+                    messageDiv.innerHTML = `<div>${message}</div><div class="message-time">${formatTime(new Date())}</div>`;
+                    loadChat(currentBuddyId, currentBuddyName, true);
+                    result.notification_created && updateUnreadCount();
+                } else {
+                    throw new Error(result.message || 'Failed to send message');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                messageDiv.innerHTML = `<div>${message}</div><div class="message-time" style="color:red;">${error.message.includes('Network') ? 'Network error' : 'Failed to send'
+                    }</div>`;
             }
-        } else {
-            throw new Error(result.message || 'Failed to send message');
         }
-    } catch (error) {
-        console.error('Error sending message:', error);
-        messageDiv.innerHTML = `
-            <div>${message}</div>
-            <div class="message-time" style="color:red;">
-                ${error.message.includes('Network') ? 'Network error' : 'Failed to send'}
-            </div>
-        `;
-        
-    }
-}
 
-function formatTime(date) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
         function resetChat() {
-            currentBuddyId = null;
-            currentBuddyName = null;
+            currentBuddyId = currentBuddyName = null;
             document.getElementById('chatTitle').textContent = 'Buddy Chat';
             document.getElementById('buddySelector').value = '';
             document.getElementById('chatMessages').innerHTML = '<div class="no-chat-selected"><p>Please select a buddy to start chatting</p></div>';
@@ -912,280 +854,146 @@ function formatTime(date) {
         }
 
         function formatTime(timestamp) {
-            const date = new Date(timestamp);
-            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
         function handleKeyPress(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
+            e.key === 'Enter' && sendMessage();
         }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const notificationBell = document.getElementById('notificationBell');
-    const notificationDropdown = document.getElementById('notificationDropdown');
-    const notificationList = document.getElementById('notificationList');
-    const notificationCount = document.getElementById('notificationCount');
-    const markAllReadBtn = document.getElementById('markAllRead');
-    const sessionUserId = "{{ session.get('user_id') }}"; 
-    notificationBell.addEventListener('click', function(e) {
-        e.stopPropagation();
-        notificationDropdown.style.display = notificationDropdown.style.display === 'block' ? 'none' : 'block';
-        if (notificationDropdown.style.display === 'block') {
-            loadNotifications();
-        }
-    });
+        document.addEventListener('DOMContentLoaded', function () {
+            const notificationBell = document.getElementById('notificationBell');
+            const notificationDropdown = document.getElementById('notificationDropdown');
+            const markAllReadBtn = document.getElementById('markAllRead');
 
-    document.addEventListener('click', function(e) {
-        if (!notificationDropdown.contains(e.target)) {
-            notificationDropdown.style.display = 'none';
-        }
-    });
-
-    markAllReadBtn.addEventListener('click', function() {
-        fetch('/api/notifications/mark-all-read', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ user_id: sessionUserId })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.status === 'success') {
-                document.querySelectorAll('.notification-item.unread').forEach(item => {
-                    item.classList.remove('unread');
-                });
-                notificationCount.textContent = '0';
-                notificationCount.style.display = 'none';
-            }
-        })
-        .catch(error => {
-            console.error('Error marking all as read:', error);
-        });
-    });
-
-    function loadNotifications() {
-        fetch(`/api/notifications?user_id=${sessionUserId}&limit=10`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(notifications => {
-            notificationList.innerHTML = '';
-            
-            if (!notifications || notifications.length === 0) {
-                notificationList.innerHTML = '<div class="notification-item">No notifications</div>';
-                return;
-            }
-
-            notifications.forEach(notification => {
-                const notificationItem = document.createElement('div');
-                notificationItem.className = `notification-item ${notification.is_read ? '' : 'unread'}`;
-                notificationItem.innerHTML = `
-                    <div class="notification-title">${notification.title}</div>
-                    <div class="notification-message">${notification.message}</div>
-                    <div class="notification-time">${formatNotificationTime(notification.created_at)}</div>
-                `;
-                
-                notificationItem.addEventListener('click', function() {
-                    if (!notification.is_read) {
-                        markNotificationAsRead(notification.id);
-                        notificationItem.classList.remove('unread');
-                    }
-                    handleNotificationClick(notification);
-                });
-                
-                notificationList.appendChild(notificationItem);
+            notificationBell.addEventListener('click', function (e) {
+                e.stopPropagation();
+                notificationDropdown.style.display = notificationDropdown.style.display === 'block' ? 'none' : 'block';
+                notificationDropdown.style.display === 'block' && loadNotifications();
             });
-        })
-        .catch(error => {
-            console.error('Error loading notifications:', error);
-            notificationList.innerHTML = '<div class="notification-item">Error loading notifications</div>';
-        });
-    }
 
-    function markNotificationAsRead(notificationId) {
-        fetch('/api/notifications/mark-read', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                user_id: sessionUserId,
-                notification_id: notificationId 
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            document.addEventListener('click', function (e) {
+                !notificationDropdown.contains(e.target) && (notificationDropdown.style.display = 'none');
+            });
+
+            markAllReadBtn.addEventListener('click', function () {
+                fetch('/api/notifications/mark-all-read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: sessionUserId })
+                })
+                    .then(response => response.ok && response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            document.querySelectorAll('.notification-item.unread').forEach(item => item.classList.remove('unread'));
+                            notificationCount.textContent = '0';
+                            notificationCount.style.display = 'none';
+                        }
+                    })
+                    .catch(console.error);
+            });
+
+            function loadNotifications() {
+                fetch(`/api/notifications?user_id=${sessionUserId}&limit=10`)
+                    .then(response => response.ok ? response.json() : Promise.reject('Network error'))
+                    .then(notifications => {
+                        const notificationList = document.getElementById('notificationList');
+                        notificationList.innerHTML = notifications?.length ? '' : '<div class="notification-item">No notifications</div>';
+
+                        notifications?.forEach(notification => {
+                            const notificationItem = document.createElement('div');
+                            notificationItem.className = `notification-item ${notification.is_read ? '' : 'unread'}`;
+                            notificationItem.innerHTML = `
+                            <div class="notification-title">${notification.title}</div>
+                            <div class="notification-message">${notification.message}</div>
+                            <div class="notification-time">${formatNotificationTime(notification.created_at)}</div>
+                        `;
+                            notificationItem.addEventListener('click', () => handleNotificationClick(notification));
+                            notificationList.appendChild(notificationItem);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error loading notifications:', error);
+                        document.getElementById('notificationList').innerHTML = '<div class="notification-item">Error loading notifications</div>';
+                    });
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.status === 'success') {
-                updateUnreadCount();
-            }
-        })
-        .catch(error => {
-            console.error('Error marking notification as read:', error);
-        });
-    }
 
-    function handleNotificationClick(notification) {
-    const notificationElement = event.target.closest('.notification-item');
-    if (notificationElement) {
-        notificationElement.classList.remove('unread');
-    }
+            function handleNotificationClick(notification) {
+                const notificationElement = event.target.closest('.notification-item');
+                notificationElement?.classList.remove('unread');
 
-    try {
-        switch(notification.notification_type) {
-            case 'buddy_request':
-                if (currentBuddyId) {
-                    toggleChat(); 
-                }
-                setTimeout(() => {
-                    window.location.href = `/buddy-requests?id=${notification.related_entity_id}`;
-                }, 200);
-                break;
+                try {
+                    switch (notification.notification_type) {
+                        case 'buddy_request':
+                            currentBuddyId && toggleChat();
+                            setTimeout(() => window.location.href = `/buddy-requests?id=${notification.related_entity_id}`, 200);
+                            break;
+                        case 'message':
+                            const senderId = notification.related_entity_id;
+                            let senderName = notification.message?.split('from ')[1]?.split(':')[0] || notification.sender_name || "Unknown User";
 
-            case 'message':
-                const senderId = notification.related_entity_id;
-                let senderName = "Unknown User";
-                
-                if (notification.message && notification.message.includes('from ')) {
-                    senderName = notification.message.split('from ')[1].split(':')[0];
-                } else if (notification.sender_name) {
-                    senderName = notification.sender_name;
-                }
-                
-                const dropdown = document.getElementById('notificationDropdown');
-                if (dropdown) {
-                    dropdown.style.display = 'none';
-                }
-                
-                if (currentBuddyId !== senderId) {
-                    if (currentBuddyId) {
-                        toggleChat(); 
+                            document.getElementById('notificationDropdown').style.display = 'none';
+                            if (currentBuddyId !== senderId) {
+                                currentBuddyId && toggleChat();
+                                setTimeout(() => openChatWithBuddy(senderId, senderName), 200);
+                            } else {
+                                toggleChat();
+                            }
+                            break;
+                        case 'event':
+                            window.open(`/events/${notification.related_entity_id}`, '_blank');
+                            break;
+                        case 'system':
+                            showSystemAlert(notification.message);
+                            break;
+                        default:
+                            notification.related_entity_type === 'user' && openUserProfile(notification.related_entity_id);
                     }
-                    setTimeout(() => {
-                        openChatWithBuddy(senderId, senderName);
-                    }, 200);
-                } else {
-                    toggleChat();
+                    !notification.is_read && markNotificationAsRead(notification.id);
+                } catch (error) {
+                    console.error('Error handling notification click:', error);
+                    window.location.href = `/notifications/view/${notification.id}`;
                 }
-                break;
-
-            case 'event':
-                window.open(`/events/${notification.related_entity_id}`, '_blank');
-                break;
-
-            case 'system':
-                showSystemAlert(notification.message);
-                break;
-
-            default:
-                console.warn('Unhandled notification type:', notification.notification_type);
-                if (notification.related_entity_type === 'user') {
-                    openUserProfile(notification.related_entity_id);
-                }
-        }
-
-        if (!notification.is_read) {
-            markNotificationAsRead(notification.id);
-        }
-
-    } catch (error) {
-        console.error('Error handling notification click:', error);
-        window.location.href = `/notifications/view/${notification.id}`;
-    }
-}
-
-function showSystemAlert(message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'system-alert';
-    alertDiv.textContent = message;
-    document.body.appendChild(alertDiv);
-    setTimeout(() => alertDiv.remove(), 5000);
-}
-
-function openUserProfile(userId) {
-    window.location.href = `/profile/${userId}`;
-}
-
-    function updateUnreadCount() {
-        fetch(`/api/notifications/count?user_id=${sessionUserId}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
             }
-            return response.json();
-        })
-        .then(data => {
-            notificationCount.textContent = data.count > 0 ? data.count : '0';
-            notificationCount.style.display = data.count > 0 ? 'flex' : 'none';
-        })
-        .catch(error => {
-            console.error('Error updating unread count:', error);
+
+            function markNotificationAsRead(notificationId) {
+                fetch('/api/notifications/mark-read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: sessionUserId, notification_id: notificationId })
+                })
+                    .then(response => response.ok && updateUnreadCount())
+                    .catch(console.error);
+            }
+
+            function updateUnreadCount() {
+                fetch(`/api/notifications/count?user_id=${sessionUserId}`)
+                    .then(response => response.ok ? response.json() : Promise.reject('Network error'))
+                    .then(data => {
+                        notificationCount.textContent = data.count > 0 ? data.count : '0';
+                        notificationCount.style.display = data.count > 0 ? 'flex' : 'none';
+                    })
+                    .catch(console.error);
+            }
+
+            function formatNotificationTime(timestamp) {
+                try {
+                    const date = new Date(timestamp);
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' • ' + date.toLocaleDateString();
+                } catch (e) {
+                    return timestamp;
+                }
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const buddyId = urlParams.get('open_chat');
+            const buddyName = urlParams.get('buddy_name');
+            buddyId && buddyName && openChatWithBuddy(buddyId, buddyName);
+
+            updateUnreadCount();
+            setInterval(updateUnreadCount, 30000);
         });
-    }
-
-    function formatNotificationTime(timestamp) {
-        try {
-            const date = new Date(timestamp);
-            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + 
-                ' • ' + date.toLocaleDateString();
-        } catch (e) {
-            console.error('Error formatting date:', e);
-            return timestamp; 
-        }
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const buddyId = urlParams.get('open_chat');
-    const buddyName = urlParams.get('buddy_name');
-
-    if (buddyId && buddyName) {
-        openChatWithBuddy(buddyId, buddyName);
-    }
-
-    updateUnreadCount();
-    setInterval(updateUnreadCount, 3000);
-});
-async function createZoomMeeting(title, startTime, duration) {
-    try {
-        const response = await fetch('/create_zoom_meeting', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                title: title,
-                start_time: startTime,
-                duration: duration
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-            return data.meeting;
-        } else {
-            throw new Error(data.message || 'Failed to create meeting');
-        }
-    } catch (error) {
-        console.error('Error creating Zoom meeting:', error);
-        throw error;
-    }
-}
     </script>
 </body>
+
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,8 +53,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .zoom-actions {
@@ -170,6 +178,7 @@
             background: rgba(0, 0, 0, 0.1);
             color: var(--dark);
         }
+
         .modal {
             position: fixed;
             top: 0;
@@ -295,7 +304,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         @media (max-width: 768px) {
@@ -312,16 +323,17 @@
         }
     </style>
 </head>
+
 <body>
     <div class="header-navbar">
         <div class="navbar">
             {% if session.get('role') == 'student' %}
             <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
-        {% elif session.get('role') == 'buddy' %}
+            {% elif session.get('role') == 'buddy' %}
             <a href="{{ url_for('buddy_dashboard') }}">Dashboard</a>
-        {% else %}
+            {% else %}
             <a href="{{ url_for('index') }}">Dashboard</a>
-        {% endif %}
+            {% endif %}
             <a href="#">My Students</a>
             <a href="#">Sessions</a>
             <a href="{{ url_for('logout') }}">Logout</a>
@@ -330,15 +342,15 @@
     </div>
     <div class="connection-status" id="connectionStatus">
         {% if zoom_connected %}
-          <span class="connected">✓ Connected to Zoom</span>
+        <span class="connected">✓ Connected to Zoom</span>
         {% else %}
-          <span class="disconnected">✗ Not connected to Zoom</span>
-          <a href="{{ url_for('zoom_authorize') }}" class="connect-link">
+        <span class="disconnected">✗ Not connected to Zoom</span>
+        <a href="{{ url_for('zoom_authorize') }}" class="connect-link">
             Connect Zoom Account
-          </a>
+        </a>
         {% endif %}
     </div>
-    
+
     <div class="container">
         <div class="zoom-header">
             <h1>🗓️<span id="dynamicTitle">Zoom Meeting</span></h1>
@@ -346,7 +358,8 @@
         </div>
 
         <div class="zoom-actions">
-            <button class="zoom-btn create-meeting" id="createMeetingBtn" {% if not zoom_connected %}disabled{% endif %}>
+            <button class="zoom-btn create-meeting" id="createMeetingBtn" {% if not zoom_connected %}disabled{% endif
+                %}>
                 <i class="fas fa-plus"></i> Create Meeting
             </button>
             <button class="zoom-btn join-meeting" id="joinMeetingBtn">
@@ -400,10 +413,11 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="inviteStudents">Invite {% if session.role == 'buddy' %}Students{% else %}Buddies{% endif %}</label>
+                    <label for="inviteStudents">Invite {% if session.role == 'buddy' %}Students{% else %}Buddies{% endif
+                        %}</label>
                     <select id="inviteStudents" multiple class="form-control">
                         {% for person in students %}
-                            <option value="{{ person.id }}">{{ person.full_name }}</option>
+                        <option value="{{ person.id }}">{{ person.full_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -481,7 +495,7 @@
         function setupWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}/ws/meetings`;
-            
+
             const socket = new WebSocket(wsUrl);
 
             socket.onopen = () => {
@@ -492,7 +506,7 @@
                 const data = JSON.parse(event.data);
                 if (data.type === 'meeting_update') {
                     showToast('Meeting updated in real-time!', 'success');
-                    loadMeetings(); 
+                    loadMeetings();
                 }
             };
 
@@ -506,13 +520,13 @@
             try {
                 showLoading(true);
                 const response = await fetch('/get_meetings');
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to load meetings');
                 }
 
                 const data = await response.json();
-                
+
                 if (data.error === "Zoom not connected") {
                     showZoomConnectModal();
                     return;
@@ -595,7 +609,7 @@
 
         async function handleCreateMeeting(e) {
             e.preventDefault();
-            
+
             const btn = document.getElementById('confirmCreateMeeting');
             btn.disabled = true;
             document.getElementById('createSpinner').style.display = 'inline-block';
@@ -604,7 +618,7 @@
             try {
                 const response = await fetch('/create_meeting', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
@@ -617,7 +631,7 @@
                 });
 
                 const result = await response.json();
-                
+
                 if (!response.ok) {
                     throw new Error(result.error || result.zoom_error || 'Failed to create meeting');
                 }
@@ -625,7 +639,7 @@
                 showToast('Meeting created successfully!', 'success');
                 toggleModal('createMeetingModal', false);
                 loadMeetings();
-                
+
                 if (result.join_url) {
                     window.open(result.join_url, '_blank');
                 }
@@ -641,7 +655,7 @@
 
         function handleJoinMeeting(e) {
             e.preventDefault();
-            
+
             const meetingId = document.getElementById('meetingId').value.replace(/\s/g, '');
             const name = document.getElementById('participantName').value;
             const password = document.getElementById('meetingPassword').value;
@@ -674,7 +688,7 @@
             const toast = document.getElementById('toastNotification');
             toast.textContent = message;
             toast.className = `toast ${type} show`;
-            
+
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
@@ -690,7 +704,7 @@
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            
+
             const icon = document.querySelector('#themeToggle i');
             icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         }
@@ -703,7 +717,7 @@
                 "Learn Together"
             ];
             let current = 0;
-            
+
             setInterval(() => {
                 document.getElementById('dynamicTitle').textContent = titles[current];
                 current = (current + 1) % titles.length;
@@ -716,4 +730,5 @@
         }
     </script>
 </body>
+
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,35 +12,35 @@
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
         }
-        
+
         .buddies-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 25px;
             margin-top: 20px;
         }
-        
+
         .buddy-card {
             background-color: white;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             transition: transform 0.3s ease;
             cursor: pointer;
         }
-        
+
         .buddy-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
-        
+
         .buddy-header {
             background-color: #871f2d;
             color: white;
@@ -47,7 +48,7 @@
             display: flex;
             align-items: center;
         }
-        
+
         .buddy-avatar {
             width: 60px;
             height: 60px;
@@ -61,31 +62,31 @@
             font-weight: bold;
             margin-right: 15px;
         }
-        
+
         .buddy-name {
             font-size: 1.2em;
             font-weight: bold;
         }
-        
+
         .buddy-details {
             padding: 20px;
         }
-        
+
         .detail-row {
             display: flex;
             margin-bottom: 12px;
         }
-        
+
         .detail-label {
             font-weight: bold;
             min-width: 120px;
             color: #555;
         }
-        
+
         .detail-value {
             flex: 1;
         }
-        
+
         .compatibility-score {
             display: inline-block;
             padding: 5px 10px;
@@ -95,25 +96,25 @@
             font-weight: bold;
             margin-bottom: 15px;
         }
-        
+
         .interests-container {
             margin-top: 15px;
         }
-        
+
         .interests-list {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 8px;
         }
-        
+
         .interest-tag {
             background-color: #f0f0f0;
             padding: 5px 12px;
             border-radius: 15px;
             font-size: 0.85em;
         }
-        
+
         .actions-container {
             display: flex;
             justify-content: space-between;
@@ -121,47 +122,47 @@
             padding-top: 15px;
             border-top: 1px solid #eee;
         }
-        
+
         .no-buddies {
             text-align: center;
             padding: 40px;
             background-color: white;
             border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        
+
         .filter-container {
             background-color: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
         }
-        
+
         .filter-row {
             display: flex;
             gap: 20px;
             margin-bottom: 15px;
         }
-        
+
         .filter-group {
             flex: 1;
         }
-        
+
         .filter-group label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
             color: #555;
         }
-        
+
         .filter-group select {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        
+
         .apply-filters {
             background-color: #871f2d;
             color: white;
@@ -170,11 +171,11 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        
+
         .apply-filters:hover {
             background-color: #6e1724;
         }
-        
+
         .top-buddies-header {
             text-align: center;
             margin: 20px 0;
@@ -184,6 +185,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="header-navbar">
         <div class="navbar">
@@ -253,7 +255,8 @@
         <div class="top-buddies-header">Your Top 10 Most Compatible Buddies</div>
         <div class="buddies-grid">
             {% for match in matches[:10] %}
-            <div class="buddy-card" onclick="window.location.href='{{ url_for('buddy_details', buddy_id=match.buddy_id) }}'">
+            <div class="buddy-card"
+                onclick="window.location.href='{{ url_for('buddy_details', buddy_id=match.buddy_id) }}'">
                 <div class="buddy-header">
                     <div class="buddy-avatar">{{ match.name[0] }}</div>
                     <div>
@@ -267,7 +270,7 @@
                         <div class="detail-label">Languages:</div>
                         <div class="detail-value">
                             {% for language in match.languages.split(',') %}
-                                <span class="interest-tag">{{ language }}</span>
+                            <span class="interest-tag">{{ language }}</span>
                             {% endfor %}
                         </div>
                     </div>
@@ -279,7 +282,7 @@
                         <div class="detail-label">Interests:</div>
                         <div class="interests-list">
                             {% for interest in match.interests.split(',') %}
-                                <span class="interest-tag">{{ interest }}</span>
+                            <span class="interest-tag">{{ interest }}</span>
                             {% endfor %}
                         </div>
                     </div>
@@ -296,4 +299,5 @@
         {% endif %}
     </div>
 </body>
+
 </html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Matches - Admin Dashboard</title>
+    <link href="{{ url_for('static', filename='background.css') }}" rel="stylesheet">
+    <style>
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-declined {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-paused {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+
+        .status-completed {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: white;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .approve-btn {
+            background-color: #28a745;
+        }
+
+        .reject-btn {
+            background-color: #dc3545;
+        }
+
+        .pause-btn {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .resume-btn {
+            background-color: #17a2b8;
+        }
+
+        .complete-btn {
+            background-color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header-navbar">
+        <div class="navbar">
+            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('admin_view_users') }}">Users</a>
+            <a href="{{ url_for('admin_all_matches') }}">Matches</a>
+            <a href="#">Reports</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        <h1 class="header-title">All Matches</h1>
+    </div>
+
+    <div class="container">
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">All Buddy Matches</h2>
+            {% if all_matches %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Match ID</th>
+                        <th>Buddy</th>
+                        <th>Student</th>
+                        <th>Match Score</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for match in all_matches %}
+                    <tr>
+                        <td>{{ match.id }}</td>
+                        <td>
+                            {{ match.buddy_name }}<br>
+                            <small>{{ match.buddy_email }}</small>
+                        </td>
+                        <td>
+                            {{ match.student_name }}<br>
+                            <small>{{ match.student_email }}</small>
+                        </td>
+                        <td>{{ match.match_score }}%</td>
+                        <td>
+                            <span class="status-badge status-{{ match.status.lower() }}">
+                                {{ match.status }}
+                            </span>
+                        </td>
+                        <td>{{ match.created_at }}</td>
+                        <td>{{ match.updated_at }}</td>
+                        <td>
+                            {% if match.status == 'pending' %}
+                            <form action="{{ url_for('admin_approve_match', match_id=match.id) }}" method="post"
+                                style="display:inline;">
+                                <button type="submit" class="action-btn approve-btn">Approve</button>
+                            </form>
+                            <form action="{{ url_for('reject_match', match_id=match.id) }}" method="post"
+                                style="display:inline;">
+                                <button type="submit" class="action-btn reject-btn">Reject</button>
+                            </form>
+                            {% elif match.status == 'active' %}
+                            <form action="{{ url_for('pause_match', match_id=match.id) }}" method="post"
+                                style="display:inline;">
+                                <button type="submit" class="action-btn pause-btn">Pause</button>
+                            </form>
+                            <form action="{{ url_for('end_match', match_id=match.id) }}" method="post"
+                                style="display:inline;">
+                                <button type="submit" class="action-btn complete-btn"
+                                    onclick="return confirm('End this match?')">End</button>
+                            </form>
+                            {% elif match.status == 'paused' %}
+                            <form action="{{ url_for('resume_match', match_id=match.id) }}" method="post"
+                                style="display:inline;">
+                                <button type="submit" class="action-btn resume-btn">Resume</button>
+                            </form>
+                            <form action="{{ url_for('end_match', match_id=match.id) }}" method="post"
+                                style="display:inline;">
+                                <button type="submit" class="action-btn complete-btn"
+                                    onclick="return confirm('End this match?')">End</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <p>No matches found.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+
+</html>

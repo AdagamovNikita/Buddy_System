@@ -12,34 +12,34 @@
             margin: 30px auto;
             padding: 30px;
         }
-        
+
         .profile-header {
             text-align: center;
             margin-bottom: 30px;
         }
-        
+
         .profile-header h2 {
             color: var(--aub-maroon);
         }
-        
+
         .profile-info {
             background-color: var(--aub-gray);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
         }
-        
+
         .interests-container {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             margin-top: 10px;
         }
-        
+
         .interest-checkbox {
             display: none;
         }
-        
+
         .interest-btn {
             padding: 8px 15px;
             border: 2px solid #ddd;
@@ -48,32 +48,32 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        
+
         .interest-checkbox:checked+.interest-btn {
             background-color: var(--aub-maroon);
             color: white;
             border-color: var(--aub-maroon);
         }
-        
+
         .phone-container {
             display: flex;
             gap: 10px;
         }
-        
+
         .country-code {
             width: 130px;
         }
-        
+
         .phone-number {
             flex-grow: 1;
         }
-        
+
         .form-note {
             font-size: 0.9em;
             color: #666;
             margin-top: 5px;
         }
-        
+
         .required-field::after {
             content: " *";
             color: var(--aub-maroon);
@@ -106,7 +106,7 @@
                 {% endif %}
                 {% endwith %}
             </div>
-            
+
             <div class="profile-info">
                 <h3>Your Basic Information</h3>
                 <p><strong>Name:</strong> {{ session['full_name'] }}</p>
@@ -326,29 +326,29 @@
 
                 <div class="form-group">
                     <label for="languages" class="required-field">Languages You Speak</label>
-                    <input type="text" id="languages" name="languages" class="form-control" placeholder="English, Spanish, etc." required>
+                    <input type="text" id="languages" name="languages" class="form-control"
+                        placeholder="English, Spanish, etc." required>
                 </div>
 
                 <div class="form-group">
                     <label for="bio" class="required-field">Short Bio</label>
-                    <textarea id="bio" name="bio" class="form-control" placeholder="Tell us about yourself..." required></textarea>
+                    <textarea id="bio" name="bio" class="form-control" placeholder="Tell us about yourself..."
+                        required></textarea>
                 </div>
 
                 <div class="form-group">
                     <label for="phone" class="required-field">Phone Number</label>
                     <div class="phone-container">
-                        <select id="phone_country_code" name="phone_country_code" class="form-control country-code" required>
+                        <select id="phone_country_code" name="phone_country_code" class="form-control country-code"
+                            required>
                             <option value="">Country Code</option>
                             {% for code, label in country_codes %}
                             <option value="{{ code }}">{{ label }}</option>
                             {% endfor %}
                         </select>
-                        <input type="tel" id="phone_number" name="phone_number" 
-                               class="form-control phone-number"
-                               pattern="[0-9]{6,15}" 
-                               title="Phone number should be 6-15 digits" 
-                               placeholder="1234567890" 
-                               required>
+                        <input type="tel" id="phone_number" name="phone_number" class="form-control phone-number"
+                            pattern="[0-9]{6,15}" title="Phone number should be 6-15 digits" placeholder="1234567890"
+                            required>
                     </div>
                     <p class="form-note">Format: Country Code + Number (digits only)</p>
                 </div>

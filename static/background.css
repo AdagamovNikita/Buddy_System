@@ -202,3 +202,121 @@ body {
         font-size: 1.8em;
     }
 }
+
+.pause-btn {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.pause-btn:hover {
+    background-color: #e0a800;
+}
+
+.end-btn {
+    background-color: #dc3545;
+}
+
+.end-btn:hover {
+    background-color: #c82333;
+}
+
+.table small {
+    color: #666;
+    font-size: 0.85em;
+}
+
+.action-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: white;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.details-btn {
+    background-color: var(--aub-maroon);
+}
+
+.details-btn:hover {
+    background-color: var(--aub-maroon-dark);
+}
+
+.reject-btn {
+    background-color: #dc3545;
+}
+
+.reject-btn:hover {
+    background-color: #c82333;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-declined {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.status-paused {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.status-completed {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.action-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: white;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.approve-btn {
+    background-color: #28a745;
+}
+
+.reject-btn {
+    background-color: #dc3545;
+}
+
+.pause-btn {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.resume-btn {
+    background-color: #17a2b8;
+}
+
+.complete-btn {
+    background-color: #6c757d;
+}

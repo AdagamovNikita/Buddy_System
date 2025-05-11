@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
             max-width: 800px;
             margin: 30px auto;
         }
-        
+
         .user-header {
             display: flex;
             justify-content: space-between;
@@ -19,12 +20,12 @@
             padding-bottom: 15px;
             border-bottom: 2px solid var(--aub-gray);
         }
-        
+
         .user-name {
             color: var(--aub-maroon);
             margin: 0;
         }
-        
+
         .user-role {
             background-color: var(--aub-maroon);
             color: white;
@@ -32,7 +33,7 @@
             border-radius: 4px;
             font-size: 0.9em;
         }
-        
+
         .detail-grid {
             display: grid;
             grid-template-columns: 1fr 2fr;
@@ -41,16 +42,16 @@
             padding-bottom: 15px;
             border-bottom: 1px solid var(--aub-gray);
         }
-        
+
         .detail-label {
             font-weight: 500;
             color: var(--aub-gray-dark);
         }
-        
+
         .detail-value {
             color: #333;
         }
-        
+
         .action-buttons {
             display: flex;
             justify-content: flex-start;
@@ -59,12 +60,14 @@
         }
     </style>
 </head>
+
 <body>
     <div class="header-navbar">
         <div class="navbar">
             <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-            <a href="#">Users</a>
-            <a href="#">Matches</a>
+            <a href="{{ url_for('admin_view_users') }}">Users</a>
+            <a href="{{ url_for('admin_all_matches') }}">Matches</a>
+            <a href="#">Reports</a>
             <a href="{{ url_for('logout') }}">Logout</a>
         </div>
         <h1 class="header-title">User Details</h1>
@@ -76,37 +79,37 @@
                 <h2 class="user-name">{{ user.full_name }}</h2>
                 <span class="user-role">{{ user.role|capitalize }}</span>
             </div>
-            
+
             <div class="detail-grid">
                 <div class="detail-label">Email:</div>
                 <div class="detail-value">{{ user.email }}</div>
             </div>
-            
+
             <div class="detail-grid">
                 <div class="detail-label">Student ID:</div>
                 <div class="detail-value">{{ details.student_id_number if details else 'N/A' }}</div>
             </div>
-            
+
             <div class="detail-grid">
                 <div class="detail-label">Age:</div>
                 <div class="detail-value">{{ details.age if details else 'N/A' }}</div>
             </div>
-            
+
             <div class="detail-grid">
                 <div class="detail-label">Gender:</div>
                 <div class="detail-value">{{ details.gender if details else 'N/A' }}</div>
             </div>
-            
+
             <div class="detail-grid">
                 <div class="detail-label">Major:</div>
                 <div class="detail-value">{{ details.major if details else 'N/A' }}</div>
             </div>
-            
+
             <div class="detail-grid">
                 <div class="detail-label">Academic Year:</div>
                 <div class="detail-value">{{ details.academic_year if details else 'N/A' }}</div>
             </div>
-            
+
             <div class="detail-grid">
                 <div class="detail-label">Nationality:</div>
                 <div class="detail-value">{{ details.nationality if details and details.nationality else 'N/A' }}</div>
@@ -116,40 +119,44 @@
                 <div class="detail-label">Languages:</div>
                 <div class="detail-value">{{ details.languages if details and details.languages else 'N/A' }}</div>
             </div>
-            
+
             <div class="detail-grid">
                 <div class="detail-label">Bio:</div>
                 <div class="detail-value">{{ details.bio if details and details.bio else 'N/A' }}</div>
             </div>
-            
+
             <div class="detail-grid">
                 <div class="detail-label">Phone:</div>
-                <div class="detail-value">{{ details.phone_number if details and details.phone_number else 'N/A' }}</div>
+                <div class="detail-value">{{ details.phone_number if details and details.phone_number else 'N/A' }}
+                </div>
             </div>
-            
+
             <div class="detail-grid">
                 <div class="detail-label">Interests:</div>
                 <div class="detail-value">
                     {% if details and details.interests %}
-                        <div class="interests-list">
-                            {% set interests_list = details.interests.split(',') %}
-                            {% for interest in interests_list %}
-                                <span class="interest-tag">{{ interest.strip() }}</span>
-                                {% if not loop.last %}, {% endif %}
-                            {% endfor %}
-                        </div>
+                    <div class="interests-list">
+                        {% set interests_list = details.interests.split(',') %}
+                        {% for interest in interests_list %}
+                        <span class="interest-tag">{{ interest.strip() }}</span>
+                        {% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </div>
                     {% else %}
-                        N/A
+                    N/A
                     {% endif %}
                 </div>
             </div>
-            
+
             <div class="action-buttons">
+                {% if not user.is_approved %}
                 <a href="{{ url_for('approve_user', user_id=user.id) }}" class="btn approve-btn">Approve</a>
                 <a href="{{ url_for('reject_user', user_id=user.id) }}" class="btn reject-btn">Reject</a>
+                {% endif %}
                 <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
             </div>
         </div>
     </div>
 </body>
+
 </html>

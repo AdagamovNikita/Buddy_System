@@ -943,8 +943,8 @@ def admin_dashboard():
         ).fetchall()
 
         total_users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-        active_matches = conn.execute(
-            "SELECT COUNT(*) FROM buddy_matches WHERE status = 'active'"
+        all_matches_count = conn.execute(
+            "SELECT COUNT(*) FROM buddy_matches"
         ).fetchone()[0]
 
         return render_template(
@@ -952,7 +952,7 @@ def admin_dashboard():
             pending_users=pending_users,
             pending_matches=pending_matches,
             recent_matches=recent_matches,
-            stats={"total_users": total_users, "active_matches": active_matches},
+            stats={"total_users": total_users, "all_matches_count": all_matches_count},
         )
 
     except Exception as e:
@@ -981,6 +981,50 @@ def approve_user(user_id):
 
     return redirect(url_for("admin_dashboard"))
 
+@app.route("/admin/users")
+def admin_view_users():
+    if not session.get("is_admin"):
+        flash("Unauthorized access", "error")
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        users = conn.execute(
+            "SELECT * FROM users ORDER BY id ASC"
+        ).fetchall()
+        return render_template(
+            "admin_users.html",
+            users=users
+        )
+    except Exception as e:
+        flash(f"Database error: {str(e)}", "error")
+        return redirect(url_for("admin_dashboard"))
+    finally:
+        conn.close()
+
+@app.route("/admin/delete-user/<int:user_id>", methods=["POST"])
+def admin_delete_user(user_id):
+    if not session.get("is_admin"):
+        flash("Unauthorized access", "error")
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        conn.execute("DELETE FROM user_details WHERE user_id = ?", (user_id,))
+        conn.execute("DELETE FROM buddy_preferences WHERE user_id = ?", (user_id,))
+        conn.execute("DELETE FROM buddy_matches WHERE buddy_id = ? OR student_id = ?", (user_id, user_id))
+        conn.execute("DELETE FROM messages WHERE sender_id = ? OR receiver_id = ?", (user_id, user_id))
+        conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.commit()
+
+        flash("User and all related data deleted successfully", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error deleting user: {str(e)}", "error")
+    finally:
+        conn.close()
+
+    return redirect(url_for("admin_view_users"))
 
 @app.route("/admin/reject-user/<int:user_id>")
 def reject_user(user_id):
@@ -1003,7 +1047,6 @@ def reject_user(user_id):
 
     return redirect(url_for("admin_dashboard"))
 
-
 @app.route("/admin/user-details/<int:user_id>")
 def user_details(user_id):
     if not session.get("is_admin"):
@@ -1022,6 +1065,101 @@ def user_details(user_id):
     finally:
         conn.close()
 
+@app.route("/admin/all-matches")
+def admin_all_matches():
+    if not session.get("is_admin"):
+        flash("Unauthorized access", "error")
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        all_matches = conn.execute("""
+            SELECT bm.*, 
+                   u1.full_name as buddy_name, 
+                   u2.full_name as student_name,
+                   u1.email as buddy_email,
+                   u2.email as student_email
+            FROM buddy_matches bm
+            JOIN users u1 ON bm.buddy_id = u1.id
+            JOIN users u2 ON bm.student_id = u2.id
+            ORDER BY bm.updated_at DESC
+        """).fetchall()
+
+        return render_template(
+            "admin_all_matches.html",
+            all_matches=all_matches
+        )
+    except Exception as e:
+        flash(f"Database error: {str(e)}", "error")
+        return redirect(url_for("admin_dashboard"))
+    finally:
+        conn.close()
+
+@app.route("/admin/resume-match/<int:match_id>", methods=["POST"])
+def resume_match(match_id):
+    if not session.get("is_admin"):
+        flash("Unauthorized access", "error")
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            "UPDATE buddy_matches SET status = 'active', updated_at = datetime('now') WHERE id = ?",
+            (match_id,)
+        )
+        conn.commit()
+        flash("Match resumed successfully", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error resuming match: {str(e)}", "error")
+    finally:
+        conn.close()
+    
+    return redirect(url_for("admin_all_matches"))
+
+@app.route("/admin/pause-match/<int:match_id>", methods=["POST"])
+def pause_match(match_id):
+    if not session.get("is_admin"):
+        flash("Unauthorized access", "error")
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            "UPDATE buddy_matches SET status = 'paused', updated_at = datetime('now') WHERE id = ?",
+            (match_id,)
+        )
+        conn.commit()
+        flash("Match paused successfully", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error pausing match: {str(e)}", "error")
+    finally:
+        conn.close()
+    
+    return redirect(url_for("admin_all_matches"))
+
+@app.route("/admin/end-match/<int:match_id>", methods=["POST"])
+def end_match(match_id):
+    if not session.get("is_admin"):
+        flash("Unauthorized access", "error")
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            "UPDATE buddy_matches SET status = 'completed', updated_at = datetime('now') WHERE id = ?",
+            (match_id,)
+        )
+        conn.commit()
+        flash("Match ended successfully", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error ending match: {str(e)}", "error")
+    finally:
+        conn.close()
+    
+    return redirect(url_for("admin_all_matches"))
 
 @app.route("/student/dashboard")
 def student_dashboard():

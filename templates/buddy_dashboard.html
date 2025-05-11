@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,6 +35,7 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+
         .dashboard-container {
             display: grid;
             grid-template-columns: 1fr 2fr;
@@ -495,11 +497,11 @@
                         <h4>My Interests</h4>
                         <div class="interests-list">
                             {% if user_details and user_details.interests %}
-                                {% for interest in user_details.interests.split(',') %}
-                                <span class="interest-tag">{{ interest }}</span>
-                                {% endfor %}
+                            {% for interest in user_details.interests.split(',') %}
+                            <span class="interest-tag">{{ interest }}</span>
+                            {% endfor %}
                             {% else %}
-                                <p>No interests specified</p>
+                            <p>No interests specified</p>
                             {% endif %}
                         </div>
                     </div>
@@ -524,12 +526,14 @@
                                 <td>{{ match.formatted_created_at }}</td>
                                 <td>{{ match.match_score }}%</td>
                                 <td>
-                                    <form action="{{ url_for('approve_match', match_id=match.id) }}" method="POST" style="display: inline;">
+                                    <form action="{{ url_for('approve_match', match_id=match.id) }}" method="POST"
+                                        style="display: inline;">
                                         <button type="submit" class="action-btn details-btn">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
                                     </form>
-                                    <form action="{{ url_for('reject_match', match_id=match.id) }}" method="POST" style="display: inline;">
+                                    <form action="{{ url_for('reject_match', match_id=match.id) }}" method="POST"
+                                        style="display: inline;">
                                         <button type="submit" class="action-btn reject-btn">
                                             <i class="fas fa-times"></i> Reject
                                         </button>
@@ -549,7 +553,7 @@
 
             <div class="right-column">
                 <div class="matches-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div class="matches-header">
                         <h2>Your Student Matches</h2>
                     </div>
 
@@ -596,22 +600,22 @@
                 <div class="sessions-card">
                     <h2>Upcoming Sessions</h2>
                     {% if sessions %}
-                        {% for session in sessions %}
-                        <div class="session-card">
-                            <div class="session-info">
-                                <div class="match-pic">{{ session.student_name[0] }}</div>
-                                <div class="match-details">
-                                    <div class="match-name">{{ session.student_name }}</div>
-                                    <div class="match-meta">
-                                        <span>{{ session.formatted_scheduled_time }}</span>
-                                        <span class="match-status status-pending">
-                                            {{ session.session_type }}
-                                        </span>
-                                    </div>
+                    {% for session in sessions %}
+                    <div class="session-card">
+                        <div class="session-info">
+                            <div class="match-pic">{{ session.student_name[0] }}</div>
+                            <div class="match-details">
+                                <div class="match-name">{{ session.student_name }}</div>
+                                <div class="match-meta">
+                                    <span>{{ session.formatted_scheduled_time }}</span>
+                                    <span class="match-status status-pending">
+                                        {{ session.session_type }}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                        {% endfor %}
+                    </div>
+                    {% endfor %}
                     {% else %}
                     <div class="no-matches">
                         <div class="no-matches-icon">
@@ -626,12 +630,12 @@
                 <div class="events-card">
                     <h2>Upcoming Events</h2>
                     {% if events %}
-                        {% for event in events %}
-                        <div class="event-card">
-                            <h4>{{ event.title }}</h4>
-                            <p>{{ event.formatted_start_time }} - {{ event.event_type }}</p>
-                        </div>
-                        {% endfor %}
+                    {% for event in events %}
+                    <div class="event-card">
+                        <h4>{{ event.title }}</h4>
+                        <p>{{ event.formatted_start_time }} - {{ event.event_type }}</p>
+                    </div>
+                    {% endfor %}
                     {% else %}
                     <div class="no-matches">
                         <div class="no-matches-icon">
@@ -662,38 +666,35 @@
                 <h3>Notifications</h3>
                 <button id="markAllRead">Mark all as read</button>
             </div>
-            <div class="notification-list" id="notificationList">
-            </div>
+            <div class="notification-list" id="notificationList"></div>
             <div class="notification-footer">
                 <a href="#">View all notifications</a>
             </div>
         </div>
     </div>
+
     <button class="chat-button" onclick="toggleChat()">💬</button>
     <div class="chat-window" id="chatWindow">
         <div class="chat-header">
             <span id="chatTitle">Student Chat</span>
-            <span style="cursor:pointer;" onclick="toggleChat()">✖</span>
+            <span onclick="toggleChat()">✖</span>
         </div>
-
         <div class="chat-student-selector">
             <select id="studentSelector" onchange="loadChat(this.value)">
                 <option value="">Select a student to chat with...</option>
                 {% if approved_matches %}
-                    {% for match in approved_matches %}
-                    <option value="{{ match.student_id }}">{{ match.student_name }}</option>
-                    {% endfor %}
+                {% for match in approved_matches %}
+                <option value="{{ match.student_id }}">{{ match.student_name }}</option>
+                {% endfor %}
                 {% endif %}
             </select>
         </div>
-
         <div class="chat-messages" id="chatMessages">
             <div class="no-chat-selected">
                 <p>Please select a student to start chatting</p>
             </div>
         </div>
-
-        <div class="chat-input" id="chatInputContainer" style="display:none;">
+        <div class="chat-input" id="chatInputContainer">
             <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
             <button onclick="sendMessage()">Send</button>
         </div>
@@ -708,26 +709,17 @@
         function toggleChat() {
             const chatWindow = document.getElementById('chatWindow');
             chatWindow.style.display = chatWindow.style.display === "flex" ? "none" : "flex";
-
-            if (chatWindow.style.display === "flex") {
-                startMessageRefresh();
-            } else {
-                stopMessageRefresh();
-                resetChat();
-            }
+            chatWindow.style.display === "flex" ? startMessageRefresh() : stopMessageRefresh();
         }
 
         function startMessageRefresh() {
-            if (chatRefreshInterval) clearInterval(chatRefreshInterval);
             chatRefreshInterval = setInterval(() => {
-                if (currentStudentId) {
-                    loadChat(currentStudentId, currentStudentName, true);
-                }
+                currentStudentId && loadChat(currentStudentId, currentStudentName, true);
             }, 3000);
         }
 
         function stopMessageRefresh() {
-            if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+            clearInterval(chatRefreshInterval);
             chatRefreshInterval = null;
         }
 
@@ -738,16 +730,13 @@
         }
 
         async function loadChat(studentId, studentName = null, silent = false) {
-            const chatMessages = document.getElementById('chatMessages');
-            const chatInputContainer = document.getElementById('chatInputContainer');
-
-            if (!studentId) {
-                resetChat();
-                return;
-            }
+            if (!studentId) return resetChat();
 
             currentStudentId = studentId;
             currentStudentName = studentName || document.getElementById('studentSelector').options[document.getElementById('studentSelector').selectedIndex].text;
+
+            const chatMessages = document.getElementById('chatMessages');
+            const chatInputContainer = document.getElementById('chatInputContainer');
 
             if (!silent) {
                 document.getElementById('chatTitle').textContent = `Chat with ${currentStudentName}`;
@@ -760,27 +749,22 @@
                 const data = await response.json();
 
                 if (data.status === 'success') {
-                    const processedMessages = data.messages.map(msg => ({
+                    displayMessages(data.messages.map(msg => ({
                         ...msg,
                         sender: msg.sender_id === sessionUserId ? 'you' : 'student'
-                    }));
-
-                    displayMessages(processedMessages);
+                    })));
                 } else if (!silent) {
                     chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages</p></div>';
                 }
             } catch (error) {
                 console.error('Error fetching messages:', error);
-                if (!silent) {
-                    chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages</p></div>';
-                }
+                if (!silent) chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages</p></div>';
             }
         }
 
         function displayMessages(messages) {
             const chatMessages = document.getElementById('chatMessages');
-
-            if (messages.length === 0) {
+            if (!messages.length) {
                 if (!chatRefreshInterval) {
                     chatMessages.innerHTML = '<div class="no-chat-selected"><p>No messages yet. Start the conversation!</p></div>';
                 }
@@ -788,18 +772,14 @@
             }
 
             const tempContainer = document.createElement('div');
-
             messages.forEach(msg => {
-                const messageDiv = document.createElement('div');
                 const isCurrentUser = msg.sender === 'you' || msg.sender_id.toString() === sessionUserId;
+                const messageDiv = document.createElement('div');
                 messageDiv.className = isCurrentUser ? 'message your-message' : 'message student-message';
-
                 messageDiv.innerHTML = `
                     <div>${msg.content}</div>
                     <div class="message-time">${formatTime(msg.timestamp)}</div>
-                    ${msg.status === 'delivered' ? '<div class="message-status">delivered</div>' : ''}
                 `;
-
                 tempContainer.appendChild(messageDiv);
             });
 
@@ -811,24 +791,16 @@
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
-
             if (!message || !currentStudentId) return;
 
             const chatMessages = document.getElementById('chatMessages');
-            
             const tempId = 'temp-' + Date.now();
             const messageDiv = document.createElement('div');
             messageDiv.id = tempId;
             messageDiv.className = 'message your-message';
-            messageDiv.innerHTML = `
-                <div>${message}</div>
-                <div class="message-time">Sending...</div>
-            `;
+            messageDiv.innerHTML = `<div>${message}</div><div class="message-time">Sending...</div>`;
 
-            if (chatMessages.querySelector('.no-chat-selected')) {
-                chatMessages.innerHTML = '';
-            }
-
+            if (chatMessages.querySelector('.no-chat-selected')) chatMessages.innerHTML = '';
             chatMessages.appendChild(messageDiv);
             input.value = '';
             chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -836,9 +808,7 @@
             try {
                 const response = await fetch('/send_message', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         sender_id: sessionUserId,
                         receiver_id: currentStudentId,
@@ -846,40 +816,23 @@
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
                 const result = await response.json();
-
                 if (result.status === 'success') {
-                    messageDiv.innerHTML = `
-                        <div>${message}</div>
-                        <div class="message-time">${formatTime(new Date())}</div>
-                    `;
-                    
+                    messageDiv.innerHTML = `<div>${message}</div><div class="message-time">${formatTime(new Date())}</div>`;
                     loadChat(currentStudentId, currentStudentName, true);
-                    
-                    if (result.notification_created) {
-                        updateUnreadCount();
-                    }
+                    result.notification_created && updateUnreadCount();
                 } else {
                     throw new Error(result.message || 'Failed to send message');
                 }
             } catch (error) {
                 console.error('Error sending message:', error);
-                messageDiv.innerHTML = `
-                    <div>${message}</div>
-                    <div class="message-time" style="color:red;">
-                        ${error.message.includes('Network') ? 'Network error' : 'Failed to send'}
-                    </div>
-                `;
+                messageDiv.innerHTML = `<div>${message}</div><div class="message-time" style="color:red;">${error.message.includes('Network') ? 'Network error' : 'Failed to send'
+                    }</div>`;
             }
         }
 
         function resetChat() {
-            currentStudentId = null;
-            currentStudentName = null;
+            currentStudentId = currentStudentName = null;
             document.getElementById('chatTitle').textContent = 'Student Chat';
             document.getElementById('studentSelector').value = '';
             document.getElementById('chatMessages').innerHTML = '<div class="no-chat-selected"><p>Please select a student to start chatting</p></div>';
@@ -887,282 +840,146 @@
         }
 
         function formatTime(timestamp) {
-            const date = new Date(timestamp);
-            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
         function handleKeyPress(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
+            e.key === 'Enter' && sendMessage();
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const notificationBell = document.getElementById('notificationBell');
             const notificationDropdown = document.getElementById('notificationDropdown');
-            const notificationList = document.getElementById('notificationList');
-            const notificationCount = document.getElementById('notificationCount');
             const markAllReadBtn = document.getElementById('markAllRead');
-            const sessionUserId = "{{ session.get('user_id') }}"; 
 
-            notificationBell.addEventListener('click', function(e) {
+            notificationBell.addEventListener('click', function (e) {
                 e.stopPropagation();
                 notificationDropdown.style.display = notificationDropdown.style.display === 'block' ? 'none' : 'block';
-                if (notificationDropdown.style.display === 'block') {
-                    loadNotifications();
-                }
+                notificationDropdown.style.display === 'block' && loadNotifications();
             });
 
-            document.addEventListener('click', function(e) {
-                if (!notificationDropdown.contains(e.target)) {
-                    notificationDropdown.style.display = 'none';
-                }
+            document.addEventListener('click', function (e) {
+                !notificationDropdown.contains(e.target) && (notificationDropdown.style.display = 'none');
             });
 
-            markAllReadBtn.addEventListener('click', function() {
+            markAllReadBtn.addEventListener('click', function () {
                 fetch('/api/notifications/mark-all-read', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: sessionUserId })
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.status === 'success') {
-                        document.querySelectorAll('.notification-item.unread').forEach(item => {
-                            item.classList.remove('unread');
-                        });
-                        notificationCount.textContent = '0';
-                        notificationCount.style.display = 'none';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error marking all as read:', error);
-                });
+                    .then(response => response.ok && response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            document.querySelectorAll('.notification-item.unread').forEach(item => item.classList.remove('unread'));
+                            notificationCount.textContent = '0';
+                            notificationCount.style.display = 'none';
+                        }
+                    })
+                    .catch(console.error);
             });
 
             function loadNotifications() {
                 fetch(`/api/notifications?user_id=${sessionUserId}&limit=10`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(notifications => {
-                    notificationList.innerHTML = '';
-                    
-                    if (!notifications || notifications.length === 0) {
-                        notificationList.innerHTML = '<div class="notification-item">No notifications</div>';
-                        return;
-                    }
+                    .then(response => response.ok ? response.json() : Promise.reject('Network error'))
+                    .then(notifications => {
+                        const notificationList = document.getElementById('notificationList');
+                        notificationList.innerHTML = notifications?.length ? '' : '<div class="notification-item">No notifications</div>';
 
-                    notifications.forEach(notification => {
-                        const notificationItem = document.createElement('div');
-                        notificationItem.className = `notification-item ${notification.is_read ? '' : 'unread'}`;
-                        notificationItem.innerHTML = `
+                        notifications?.forEach(notification => {
+                            const notificationItem = document.createElement('div');
+                            notificationItem.className = `notification-item ${notification.is_read ? '' : 'unread'}`;
+                            notificationItem.innerHTML = `
                             <div class="notification-title">${notification.title}</div>
                             <div class="notification-message">${notification.message}</div>
                             <div class="notification-time">${formatNotificationTime(notification.created_at)}</div>
                         `;
-                        
-                        notificationItem.addEventListener('click', function() {
-                            if (!notification.is_read) {
-                                markNotificationAsRead(notification.id);
-                                notificationItem.classList.remove('unread');
-                            }
-                            handleNotificationClick(notification);
+                            notificationItem.addEventListener('click', () => handleNotificationClick(notification));
+                            notificationList.appendChild(notificationItem);
                         });
-                        
-                        notificationList.appendChild(notificationItem);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading notifications:', error);
-                    notificationList.innerHTML = '<div class="notification-item">Error loading notifications</div>';
-                });
-            }
-
-            function markNotificationAsRead(notificationId) {
-                fetch('/api/notifications/mark-read', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        user_id: sessionUserId,
-                        notification_id: notificationId 
                     })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.status === 'success') {
-                        updateUnreadCount();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error marking notification as read:', error);
-                });
+                    .catch(error => {
+                        console.error('Error loading notifications:', error);
+                        document.getElementById('notificationList').innerHTML = '<div class="notification-item">Error loading notifications</div>';
+                    });
             }
 
             function handleNotificationClick(notification) {
                 const notificationElement = event.target.closest('.notification-item');
-                if (notificationElement) {
-                    notificationElement.classList.remove('unread');
-                }
+                notificationElement?.classList.remove('unread');
 
                 try {
-                    switch(notification.notification_type) {
+                    switch (notification.notification_type) {
                         case 'buddy_request':
-                            if (currentStudentId) {
-                                toggleChat();
-                            }
-                            setTimeout(() => {
-                                window.location.href = `/buddy-requests?id=${notification.related_entity_id}`;
-                            }, 200);
+                            currentStudentId && toggleChat();
+                            setTimeout(() => window.location.href = `/buddy-requests?id=${notification.related_entity_id}`, 200);
                             break;
-
                         case 'message':
                             const senderId = notification.related_entity_id;
-                            let senderName = "Unknown Student";
-                            
-                            if (notification.message && notification.message.includes('from ')) {
-                                senderName = notification.message.split('from ')[1].split(':')[0];
-                            } else if (notification.sender_name) {
-                                senderName = notification.sender_name;
-                            }
-                            
-                            const dropdown = document.getElementById('notificationDropdown');
-                            if (dropdown) {
-                                dropdown.style.display = 'none';
-                            }
-                            
+                            let senderName = notification.message?.split('from ')[1]?.split(':')[0] || notification.sender_name || "Unknown Student";
+
+                            document.getElementById('notificationDropdown').style.display = 'none';
                             if (currentStudentId !== senderId) {
-                                if (currentStudentId) {
-                                    toggleChat(); 
-                                }
-                                setTimeout(() => {
-                                    openChatWithStudent(senderId, senderName);
-                                }, 200);
+                                currentStudentId && toggleChat();
+                                setTimeout(() => openChatWithStudent(senderId, senderName), 200);
                             } else {
                                 toggleChat();
                             }
                             break;
-
                         case 'event':
                             window.open(`/events/${notification.related_entity_id}`, '_blank');
                             break;
-
                         case 'system':
                             showSystemAlert(notification.message);
                             break;
-
                         default:
-                            console.warn('Unhandled notification type:', notification.notification_type);
-                            if (notification.related_entity_type === 'user') {
-                                openUserProfile(notification.related_entity_id);
-                            }
+                            notification.related_entity_type === 'user' && openUserProfile(notification.related_entity_id);
                     }
-
-                    if (!notification.is_read) {
-                        markNotificationAsRead(notification.id);
-                    }
-
+                    !notification.is_read && markNotificationAsRead(notification.id);
                 } catch (error) {
                     console.error('Error handling notification click:', error);
                     window.location.href = `/notifications/view/${notification.id}`;
                 }
             }
 
-            function showSystemAlert(message) {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'system-alert';
-                alertDiv.textContent = message;
-                document.body.appendChild(alertDiv);
-                setTimeout(() => alertDiv.remove(), 5000);
-            }
-
-            function openUserProfile(userId) {
-                window.location.href = `/profile/${userId}`;
+            function markNotificationAsRead(notificationId) {
+                fetch('/api/notifications/mark-read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: sessionUserId, notification_id: notificationId })
+                })
+                    .then(response => response.ok && updateUnreadCount())
+                    .catch(console.error);
             }
 
             function updateUnreadCount() {
                 fetch(`/api/notifications/count?user_id=${sessionUserId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    notificationCount.textContent = data.count > 0 ? data.count : '0';
-                    notificationCount.style.display = data.count > 0 ? 'flex' : 'none';
-                })
-                .catch(error => {
-                    console.error('Error updating unread count:', error);
-                });
+                    .then(response => response.ok ? response.json() : Promise.reject('Network error'))
+                    .then(data => {
+                        notificationCount.textContent = data.count > 0 ? data.count : '0';
+                        notificationCount.style.display = data.count > 0 ? 'flex' : 'none';
+                    })
+                    .catch(console.error);
             }
 
             function formatNotificationTime(timestamp) {
                 try {
                     const date = new Date(timestamp);
-                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + 
-                        ' • ' + date.toLocaleDateString();
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' • ' + date.toLocaleDateString();
                 } catch (e) {
-                    console.error('Error formatting date:', e);
-                    return timestamp; 
+                    return timestamp;
                 }
             }
 
             const urlParams = new URLSearchParams(window.location.search);
             const studentId = urlParams.get('open_chat');
             const studentName = urlParams.get('student_name');
-
-            if (studentId && studentName) {
-                openChatWithStudent(studentId, studentName);
-            }
+            studentId && studentName && openChatWithStudent(studentId, studentName);
 
             updateUnreadCount();
             setInterval(updateUnreadCount, 30000);
         });
-        async function createZoomMeeting(title, startTime, duration) {
-    try {
-        const response = await fetch('/create_zoom_meeting', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                title: title,
-                start_time: startTime,
-                duration: duration
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-            return data.meeting;
-        } else {
-            throw new Error(data.message || 'Failed to create meeting');
-        }
-    } catch (error) {
-        console.error('Error creating Zoom meeting:', error);
-        throw error;
-    }
-}
     </script>
-
 </body>
+
 </html>

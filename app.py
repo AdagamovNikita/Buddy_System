@@ -28,7 +28,7 @@ app = Flask(__name__)
 app.secret_key = "your_secret_key_here"
 notifications_bp = Blueprint('notifications', __name__)
 
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' #local only
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' 
 
 def get_db_connection():
     conn = sqlite3.connect("buddy_system.db")
@@ -42,6 +42,103 @@ def generate_zoom_jwt():
      }
      return jwt.encode(payload, ZOOM_CLIENT_SECRET, algorithm='HS256')
 
+@app.route("/calendar")
+def calendar():
+    if "user_id" not in session:
+        flash("Please login to access the calendar", "warning")
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    try:
+        user_id = session["user_id"]
+        role = session["role"]
+        
+        event_query = """
+            SELECT e.*, 
+                   CASE WHEN ea.user_id IS NOT NULL THEN 1 ELSE 0 END as is_attending
+            FROM events e
+            LEFT JOIN event_attendees ea ON e.id = ea.event_id AND ea.user_id = ?
+            WHERE 1=1
+        """
+
+        params = [user_id]
+
+        if role == "student":
+            event_query += """
+                AND (e.is_public = 1 
+                     OR e.organizer_id IN (
+                         SELECT buddy_id FROM buddy_matches 
+                         WHERE student_id = ? AND status = 'active'
+                     )
+                     OR e.organizer_id = ?
+                     OR ea.user_id IS NOT NULL)
+            """
+            params.extend([user_id, user_id])
+        else: 
+            event_query += """
+                AND (e.is_public = 1 
+                     OR e.organizer_id = ?
+                     OR ea.user_id IS NOT NULL)
+            """
+            params.append(user_id)
+
+        event_query += " ORDER BY e.start_time"
+        events = conn.execute(event_query, params).fetchall()
+
+        sessions = conn.execute("""
+            SELECT ss.*, 
+                   CASE 
+                       WHEN bm.buddy_id = ? THEN u2.full_name 
+                       ELSE u1.full_name 
+                   END as other_person_name
+            FROM scheduled_sessions ss
+            JOIN buddy_matches bm ON ss.match_id = bm.id
+            JOIN users u1 ON bm.buddy_id = u1.id
+            JOIN users u2 ON bm.student_id = u2.id
+            WHERE (bm.buddy_id = ? OR bm.student_id = ?)
+            AND ss.status = 'scheduled'
+        """, (user_id, user_id, user_id)).fetchall()
+
+        formatted_events = []
+        for event in events:
+            formatted_events.append({
+                "id": event["id"],
+                "title": event["title"],
+                "description": event["description"],
+                "event_type": event["event_type"],
+                "location": event["location"],
+                "start_time": event["start_time"],
+                "end_time": event["end_time"],
+                "organizer_id": event["organizer_id"],
+                "is_attending": event["is_attending"],
+                "points_value": event["points_value"]
+            })
+
+        for session_item in sessions:
+            formatted_events.append({
+                "id": f"session_{session_item['id']}",
+                "title": f"Session with {session_item['other_person_name']}",
+                "description": session_item["notes"] or "Buddy System Session",
+                "event_type": session_item["session_type"],
+                "location": session_item["location"],
+                "start_time": session_item["scheduled_time"],
+                "end_time": (datetime.strptime(session_item["scheduled_time"], "%Y-%m-%d %H:%M:%S") + 
+                            timedelta(minutes=session_item["duration_minutes"])).strftime("%Y-%m-%d %H:%M:%S"),
+                "organizer_id": session["user_id"],
+                "is_attending": True,
+                "points_value": 0
+            })
+
+        return render_template("calendar.html", 
+                             events=formatted_events,
+                             full_name=session["full_name"],
+                             role=role)
+
+    except Exception as e:
+        flash(f"Error loading calendar: {str(e)}", "error")
+        return redirect(url_for(f"{session['role']}_dashboard"))
+    finally:
+        conn.close()
 
 # ignore the majors for now. all of them say bachelor of science regardless of the major, this is just from the dummy data and is not an error with the database or
 DUMMY_STUDENT_DATA = [
@@ -640,7 +737,6 @@ def refresh_zoom_token():
             session['zoom_token_expires'] = time.time() + tokens['expires_in'] - 60
             return True
         
-        # If refresh fails the clear all Zoom tokens
         session.pop('zoom_access_token', None)
         session.pop('zoom_refresh_token', None)
         session.pop('zoom_token_expires', None)
@@ -660,7 +756,6 @@ def zoom_token_required(f):
         if 'zoom_access_token' not in session:
             return jsonify({"error": "Zoom not connected"}), 401
             
-        # Check if token is about to expire range is 5 minutes 
         if time.time() > session.get('zoom_token_expires', 0) - 300:
             if not refresh_zoom_token():
                 return jsonify({"error": "Zoom session expired"}), 401
@@ -2182,7 +2277,6 @@ def create_meeting():
             "Content-Type": "application/json"
         }
         
-        # Convert local time to UTC for Zoom API don't change it works.
         meeting_time = datetime.strptime(data['time'], "%Y-%m-%dT%H:%M")
         meeting_time_utc = meeting_time.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         
@@ -2347,6 +2441,239 @@ def check_token():
         return jsonify(response.json())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/events", methods=["GET"])
+def handle_events():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    user_id = session["user_id"]
+    role = session["role"]
+    
+    conn = get_db_connection()
+    try:
+        matches_query = """
+            SELECT CASE 
+                WHEN buddy_id = ? THEN student_id 
+                ELSE buddy_id 
+            END as matched_user
+            FROM buddy_matches 
+            WHERE (buddy_id = ? OR student_id = ?) 
+            AND status = 'active'
+        """
+        matches = [m["matched_user"] for m in conn.execute(matches_query, (user_id, user_id, user_id)).fetchall()]
+
+        event_query = """
+            SELECT e.*, 
+                CASE WHEN ea.user_id IS NOT NULL THEN 1 ELSE 0 END as is_attending
+            FROM events e
+            LEFT JOIN event_attendees ea ON e.id = ea.event_id AND ea.user_id = ?
+            WHERE (
+                e.is_public = 1 
+                OR e.organizer_id = ?
+                OR e.organizer_id IN (%s)
+            )
+            ORDER BY e.start_time
+        """ % (','.join('?' * len(matches)) if matches else 'NULL')
+
+        params = [user_id, user_id] + matches
+        
+        events = conn.execute(event_query, params).fetchall()
+        return jsonify([dict(e) for e in events])
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route("/api/events", methods=["POST"])
+def create_event():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json()
+    try:
+        conn = get_db_connection()
+        conn.execute(
+            """INSERT INTO events 
+            (title, description, event_type, location, 
+            start_time, end_time, organizer_id, is_public)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                data["title"],
+                data.get("description", ""),
+                data["type"],
+                data.get("location", ""),
+                data["start"],
+                data["end"],
+                session["user_id"],
+                data.get("is_public", False)  
+            )
+        )
+        conn.commit()
+        return jsonify({"status": "success"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+def get_event_color(event_type):
+    color_map = {
+        'mentorship': '#4CAF50',
+        'social': '#f72585',
+        'academic': '#9C27B0',
+        'workshop': '#FF9800',
+        'zoom': '#2D8CFF'
+    }
+    return color_map.get(event_type, '#4361ee')
+
+@app.route("/api/events/<int:event_id>", methods=["GET", "PUT", "DELETE"])
+def handle_single_event(event_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    conn = get_db_connection()
+    
+    if request.method == "GET":
+        try:
+            event = conn.execute("""
+                SELECT e.*, 
+                       CASE WHEN ea.user_id IS NOT NULL THEN 1 ELSE 0 END as is_attending
+                FROM events e
+                LEFT JOIN event_attendees ea ON e.id = ea.event_id AND ea.user_id = ?
+                WHERE e.id = ?
+            """, (session["user_id"], event_id)).fetchone()
+
+            if not event:
+                return jsonify({"error": "Event not found"}), 404
+
+            return jsonify(dict(event))
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+        finally:
+            conn.close()
+
+    elif request.method == "PUT":
+        try:
+            data = request.get_json()
+            event = conn.execute("SELECT * FROM events WHERE id = ?", (event_id,)).fetchone()
+
+            if not event:
+                return jsonify({"error": "Event not found"}), 404
+
+            if event["organizer_id"] != session["user_id"] and not session.get("is_admin"):
+                return jsonify({"error": "Unauthorized"}), 403
+
+            conn.execute("""
+                UPDATE events SET
+                    title = ?,
+                    description = ?,
+                    event_type = ?,
+                    location = ?,
+                    start_time = ?,
+                    end_time = ?,
+                    max_attendees = ?,
+                    is_public = ?,
+                    points_value = ?
+                WHERE id = ?
+            """, (
+                data.get("title", event["title"]),
+                data.get("description", event["description"]),
+                data.get("event_type", event["event_type"]),
+                data.get("location", event["location"]),
+                data.get("start_time", event["start_time"]),
+                data.get("end_time", event["end_time"]),
+                data.get("max_attendees", event["max_attendees"]),
+                data.get("is_public", event["is_public"]),
+                data.get("points_value", event["points_value"]),
+                event_id
+            ))
+            
+            conn.commit()
+            return jsonify({"status": "success"})
+
+        except Exception as e:
+            conn.rollback()
+            return jsonify({"error": str(e)}), 500
+        finally:
+            conn.close()
+
+    elif request.method == "DELETE":
+        try:
+            event = conn.execute("SELECT * FROM events WHERE id = ?", (event_id,)).fetchone()
+
+            if not event:
+                return jsonify({"error": "Event not found"}), 404
+
+            if event["organizer_id"] != session["user_id"] and not session.get("is_admin"):
+                return jsonify({"error": "Unauthorized"}), 403
+
+            conn.execute("DELETE FROM events WHERE id = ?", (event_id,))
+            conn.execute("DELETE FROM event_attendees WHERE event_id = ?", (event_id,))
+            conn.commit()
+            
+            return jsonify({"status": "success"})
+
+        except Exception as e:
+            conn.rollback()
+            return jsonify({"error": str(e)}), 500
+        finally:
+            conn.close()
+
+@app.route("/api/events/<int:event_id>/attend", methods=["POST", "DELETE"])
+def handle_event_attendance(event_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    conn = get_db_connection()
+    
+    try:
+        event = conn.execute("SELECT * FROM events WHERE id = ?", (event_id,)).fetchone()
+        if not event:
+            return jsonify({"error": "Event not found"}), 404
+
+        if request.method == "POST":
+            existing = conn.execute("""
+                SELECT 1 FROM event_attendees 
+                WHERE event_id = ? AND user_id = ?
+            """, (event_id, session["user_id"])).fetchone()
+
+            if existing:
+                return jsonify({"error": "Already attending this event"}), 400
+
+            if event["max_attendees"] > 0:
+                attendees_count = conn.execute("""
+                    SELECT COUNT(*) FROM event_attendees 
+                    WHERE event_id = ?
+                """, (event_id,)).fetchone()[0]
+
+                if attendees_count >= event["max_attendees"]:
+                    return jsonify({"error": "Event is full"}), 400
+
+            conn.execute("""
+                INSERT INTO event_attendees (event_id, user_id)
+                VALUES (?, ?)
+            """, (event_id, session["user_id"]))
+            
+            conn.commit()
+            return jsonify({"status": "success"}), 201
+
+        elif request.method == "DELETE":
+            conn.execute("""
+                DELETE FROM event_attendees 
+                WHERE event_id = ? AND user_id = ?
+            """, (event_id, session["user_id"]))
+            
+            conn.commit()
+            return jsonify({"status": "success"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+    
 if __name__ == "__main__":
     if not os.path.exists("buddy_system.db"):
         initialize_db()

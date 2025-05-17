@@ -13,14 +13,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="{{ url_for('static', filename='background.css') }}" rel="stylesheet">
     <style>
-         /* Add to your existing tour-highlight class */
         .tour-highlight {
             position: relative;
             animation: element-pulse 1.5s infinite;
             z-index: 999999 !important;
         }
 
-        /* Fix z-index conflicts */
         .shepherd-element {
             z-index: 9999999 !important;
         }
@@ -54,7 +52,6 @@
             backdrop-filter: blur(4px);
         }
 
-        /* Enhanced Tour Styles */
         .shepherd-theme-custom .shepherd-content {
             border: 2px solid #871f2d;
             border-radius: 15px;
@@ -783,7 +780,6 @@
                 <div class="events-card">
                     <h2>Upcoming Events</h2>
                     <div id="upcoming-events-list">
-                        <!-- Events will be loaded here via JavaScript -->
                         <div class="loading-message">Loading events...</div>
                     </div>
                 </div>
@@ -847,7 +843,6 @@
         let currentStudentName = null;
         let chatRefreshInterval = null;
                 function initTooltips() {
-            // Profile Avatar
             tippy('.profile-pic', {
                 content: '✨ Click to update your profile photo',
                 theme: 'buddy',
@@ -858,7 +853,6 @@
                 allowHTML: true
             });
 
-            // Find Buddy Button
             tippy('.select-buddy-btn', {
                 content: '<strong>AI-Powered Matching</strong><br>Find your perfect study partner!',
                 theme: 'buddy',
@@ -869,7 +863,6 @@
                 allowHTML: true
             });
 
-            // Chat Button
             tippy('.chat-button', {
                 content: '<i class="fas fa-comments"></i> Real-time chat with your Students',
                 theme: 'buddy',
@@ -879,7 +872,6 @@
                 allowHTML: true
             });
 
-            // Calendar Button
             tippy('.calendar-button', {
                 content: '📅 Sync with your academic calendar',
                 theme: 'buddy-soft',
@@ -888,7 +880,6 @@
                 arrow: true
             });
 
-            // Notification Bell
             tippy('#notificationBell', {
                 content: 'View your notifications',
                 theme: 'buddy-soft',
@@ -897,7 +888,6 @@
             });
         }
 
-        // Enhanced Tour Implementation
         function initGuidedTour() {
             const tour = new Shepherd.Tour({
                 defaultStepOptions: {
@@ -953,7 +943,6 @@
                 }
             });
 
-            // Add more tour steps following the same pattern...
             tour.addStep({
                     title: '🛠 Update Interests',
                     text: `Iinterests are here you match with buddy based on them!`,
@@ -982,7 +971,6 @@
                     }
                 });
 
-                // New: Buddy Matches
                 tour.addStep({
                     title: '🤝 Buddy Matches',
                     text: `View your current matches and request new Students here!`,
@@ -1011,7 +999,6 @@
                     }
                 });
 
-                // New: Events Section
                 tour.addStep({
                     title: '📅 University Events',
                     text: `Check upcoming campus events - perfect opportunities to meet your buddy!`,
@@ -1040,7 +1027,6 @@
                     }
                 });
 
-                // New: Pending Requests
                 tour.addStep({
                     title: '⏳ Pending Requests',
                     text: `Track your sent buddy requests here. You'll get notified when they respond!`,
@@ -1069,7 +1055,6 @@
                     }
                 });
 
-                // New: Zoom Meetings
                 tour.addStep({
                     title: '🎥 Virtual Meetings',
                     text: `Schedule and manage Zoom meetings directly with your buddy here!`,
@@ -1098,7 +1083,6 @@
                     }
                 });
 
-            // Start tour if first visit
             if (!localStorage.getItem('tour_v2_completed')) {
                 tour.start();
                 localStorage.setItem('tour_v2_completed', 'true');
@@ -1109,11 +1093,8 @@
             initTooltips();
             initGuidedTour();
             
-            // Rest of your original JavaScript
-            // ... (All your previous JavaScript here) ...
         });
 
-        // Enhanced Chat System with Tooltips
         function enhanceChatTooltips() {
             tippy('.message-buddy-btn', {
                 content: 'Start a conversation with your buddy',
@@ -1129,7 +1110,6 @@
             });
         }
 
-        // Call this after chat initialization
         enhanceChatTooltips();
         function toggleChat() {
             const chatWindow = document.getElementById('chatWindow');

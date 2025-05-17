@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoom meeting | University Buddy System</title>
+    <link href="{{ url_for('static', filename='background.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4a6bff;
+            --primary-dark: #3a56cc;
+            --success: #00c853;
+            --error: #ff4444;
+            --warning: #ffbb33;
+            --dark: #1a1a2e;
+            --darker: #16213e;
+            --light: #f8f9fa;
+            --lighter: #ffffff;
+            --shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        [data-theme="dark"] {
+            --primary: #6c8eff;
+            --primary-dark: #5a7ae6;
+            --dark: #f8f9fa;
+            --darker: #e9ecef;
+            --light: #1a1a2e;
+            --lighter: #16213e;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+            transition: var(--transition);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .zoom-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .zoom-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .zoom-btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            border: none;
+            font-size: 1rem;
+        }
+
+        .zoom-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .zoom-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .create-meeting {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .join-meeting {
+            background: linear-gradient(135deg, var(--success), #00a152);
+            color: white;
+        }
+
+        .connect-zoom {
+            background: linear-gradient(135deg, var(--warning), #e6a700);
+            color: white;
+        }
+
+        .meetings-list {
+            background-color: var(--lighter);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .meeting-item {
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .meeting-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .meeting-info h4 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .meeting-meta {
+            display: flex;
+            gap: 1rem;
+            color: var(--dark);
+            opacity: 0.8;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .meeting-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .meeting-actions button {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+        }
+
+        .start-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        .copy-btn {
+            background: rgba(0, 0, 0, 0.1);
+            color: var(--dark);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease-out;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--lighter);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: translateY(20px);
+            transition: all 0.3s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transform: translateX(150%);
+            transition: transform 0.3s ease-out;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--error);
+        }
+
+        .toast.warning {
+            background: var(--warning);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            z-index: 999;
+            border: none;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(30deg);
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .meeting-item {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .meeting-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header-navbar">
+        <div class="navbar">
+            {% if session.get('role') == 'student' %}
+            <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
+            {% elif session.get('role') == 'buddy' %}
+            <a href="{{ url_for('buddy_dashboard') }}">Dashboard</a>
+            {% else %}
+            <a href="{{ url_for('index') }}">Dashboard</a>
+            {% endif %}
+            <a href="#">My Students</a>
+            <a href="#">Sessions</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        <h1 class="header-title">Zoom Meetings</h1>
+    </div>
+    <div class="connection-status" id="connectionStatus">
+        {% if zoom_connected %}
+        <span class="connected">✓ Connected to Zoom</span>
+        {% else %}
+        <span class="disconnected">✗ Not connected to Zoom</span>
+        <a href="{{ url_for('zoom_authorize') }}" class="connect-link">
+            Connect Zoom Account
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        <div class="zoom-header">
+            <h1>🗓️<span id="dynamicTitle">Zoom Meeting</span></h1>
+            <p>Create, join, and dominate meetings like never before.</p>
+        </div>
+
+        <div class="zoom-actions">
+            <button class="zoom-btn create-meeting" id="createMeetingBtn" {% if not zoom_connected %}disabled{% endif
+                %}>
+                <i class="fas fa-plus"></i> Create Meeting
+            </button>
+            <button class="zoom-btn join-meeting" id="joinMeetingBtn">
+                <i class="fas fa-sign-in-alt"></i> Join Meeting
+            </button>
+            {% if not zoom_connected %}
+            <a href="/zoom/authorize" class="zoom-btn connect-zoom">
+                <i class="fas fa-plug"></i> Connect Zoom
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="meetings-list">
+            <h2><i class="fas fa-calendar-alt"></i> Your Meetings</h2>
+            <div id="meetingsContainer">
+            </div>
+            <div id="noMeetings" class="no-meetings" style="display: none;">
+                <i class="fas fa-video-slash"></i>
+                <h3>No Meetings Found</h3>
+                <p>Create one to begin your journey.</p>
+            </div>
+            <div id="loadingMeetings" style="text-align: center; padding: 2rem;">
+                <div class="spinner"></div>
+                <p>Warping through meetings...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="createMeetingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-plus"></i> Create New Meeting</h2>
+                <button class="close-btn" id="closeCreateModal">&times;</button>
+            </div>
+            <form id="createMeetingForm">
+                <div class="form-group">
+                    <label for="meetingTitle">Meeting Title</label>
+                    <input type="text" id="meetingTitle" class="form-control" placeholder="e.g., Mentorship" required>
+                </div>
+                <div class="form-group">
+                    <label for="meetingTime">Date & Time</label>
+                    <input type="datetime-local" id="meetingTime" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="meetingDuration">Duration (mins)</label>
+                    <select id="meetingDuration" class="form-control">
+                        <option value="30">30 mins</option>
+                        <option value="60" selected>60 mins</option>
+                        <option value="90">90 mins</option>
+                        <option value="120">120 mins</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="inviteStudents">Invite {% if session.role == 'buddy' %}Students{% else %}Buddies{% endif
+                        %}</label>
+                    <select id="inviteStudents" multiple class="form-control">
+                        {% for person in students %}
+                        <option value="{{ person.id }}">{{ person.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelCreateMeeting">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="confirmCreateMeeting">
+                        <span id="createBtnText">Create</span>
+                        <span class="spinner" id="createSpinner" style="display: none;"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="joinMeetingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-sign-in-alt"></i> Join Meeting</h2>
+                <button class="close-btn" id="closeJoinModal">&times;</button>
+            </div>
+            <form id="joinMeetingForm">
+                <div class="form-group">
+                    <label for="meetingId">Meeting ID</label>
+                    <input type="text" id="meetingId" class="form-control" placeholder="123 456 7890" required>
+                </div>
+                <div class="form-group">
+                    <label for="participantName">Your Name</label>
+                    <input type="text" id="participantName" class="form-control" placeholder="Your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="meetingPassword">Password (if required)</label>
+                    <input type="password" id="meetingPassword" class="form-control">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelJoinMeeting">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="confirmJoinMeeting">
+                        <i class="fas fa-rocket"></i> Join Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast" id="toastNotification"></div>
+
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initZoomMode();
+        });
+
+        function initZoomMode() {
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+            now.setMinutes(0);
+            document.getElementById('meetingTime').value = now.toISOString().slice(0, 16);
+
+            const userName = "{{ session.get('name', '') }}";
+            if (userName) {
+                document.getElementById('participantName').value = userName;
+            }
+
+            loadMeetings();
+
+            setupWebSocket();
+
+            setupEventListeners();
+
+            animateTitle();
+        }
+
+        function setupWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/meetings`;
+
+            const socket = new WebSocket(wsUrl);
+
+            socket.onopen = () => {
+                console.log('WebSocket connected: Real-time updates active');
+            };
+
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'meeting_update') {
+                    showToast('Meeting updated in real-time!', 'success');
+                    loadMeetings();
+                }
+            };
+
+            socket.onclose = () => {
+                console.log('WebSocket disconnected. Retrying in 5s...');
+                setTimeout(setupWebSocket, 5000);
+            };
+        }
+
+        async function loadMeetings() {
+            try {
+                showLoading(true);
+                const response = await fetch('/get_meetings');
+
+                if (!response.ok) {
+                    throw new Error('Failed to load meetings');
+                }
+
+                const data = await response.json();
+
+                if (data.error === "Zoom not connected") {
+                    showZoomConnectModal();
+                    return;
+                }
+
+                renderMeetings(data.meetings || []);
+            } catch (error) {
+                showToast(`Error: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function renderMeetings(meetings) {
+            const container = document.getElementById('meetingsContainer');
+            container.innerHTML = '';
+
+            if (meetings.length === 0) {
+                document.getElementById('noMeetings').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('noMeetings').style.display = 'none';
+
+            meetings.forEach(meeting => {
+                const meetingEl = document.createElement('div');
+                meetingEl.className = 'meeting-item';
+                meetingEl.innerHTML = `
+                    <div class="meeting-info">
+                        <h4>${meeting.topic || 'Untitled Meeting'}</h4>
+                        <div class="meeting-meta">
+                            <span><i class="far fa-calendar"></i> ${new Date(meeting.start_time).toLocaleString()}</span>
+                            <span><i class="fas fa-users"></i> ${meeting.participants?.length || 0} people</span>
+                        </div>
+                    </div>
+                    <div class="meeting-actions">
+                        <button class="start-btn" data-id="${meeting.id}">
+                            <i class="fas fa-play"></i> Start
+                        </button>
+                        <button class="copy-btn" data-url="${meeting.join_url}">
+                            <i class="far fa-copy"></i> Copy
+                        </button>
+                    </div>
+                `;
+                container.appendChild(meetingEl);
+            });
+        }
+
+        function setupEventListeners() {
+            document.getElementById('createMeetingBtn').addEventListener('click', () => toggleModal('createMeetingModal', true));
+            document.getElementById('joinMeetingBtn').addEventListener('click', () => toggleModal('joinMeetingModal', true));
+            document.getElementById('closeCreateModal').addEventListener('click', () => toggleModal('createMeetingModal', false));
+            document.getElementById('closeJoinModal').addEventListener('click', () => toggleModal('joinMeetingModal', false));
+            document.getElementById('cancelCreateMeeting').addEventListener('click', () => toggleModal('createMeetingModal', false));
+            document.getElementById('cancelJoinMeeting').addEventListener('click', () => toggleModal('joinMeetingModal', false));
+
+            document.getElementById('createMeetingForm').addEventListener('submit', handleCreateMeeting);
+            document.getElementById('joinMeetingForm').addEventListener('submit', handleJoinMeeting);
+
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        toggleModal(modal.id, false);
+                    }
+                });
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        if (modal.classList.contains('active')) {
+                            toggleModal(modal.id, false);
+                        }
+                    });
+                }
+            });
+        }
+
+        async function handleCreateMeeting(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('confirmCreateMeeting');
+            btn.disabled = true;
+            document.getElementById('createSpinner').style.display = 'inline-block';
+            document.getElementById('createBtnText').textContent = 'Creating...';
+
+            try {
+                const response = await fetch('/create_meeting', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: document.getElementById('meetingTitle').value,
+                        time: document.getElementById('meetingTime').value,
+                        duration: document.getElementById('meetingDuration').value,
+                        students: Array.from(document.getElementById('inviteStudents').selectedOptions).map(o => o.value)
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || result.zoom_error || 'Failed to create meeting');
+                }
+
+                showToast('Meeting created successfully!', 'success');
+                toggleModal('createMeetingModal', false);
+                loadMeetings();
+
+                if (result.join_url) {
+                    window.open(result.join_url, '_blank');
+                }
+            } catch (error) {
+                showToast(`Error: ${error.message}`, 'error');
+                console.error('Meeting creation error:', error);
+            } finally {
+                btn.disabled = false;
+                document.getElementById('createSpinner').style.display = 'none';
+                document.getElementById('createBtnText').textContent = 'Create';
+            }
+        }
+
+        function handleJoinMeeting(e) {
+            e.preventDefault();
+
+            const meetingId = document.getElementById('meetingId').value.replace(/\s/g, '');
+            const name = document.getElementById('participantName').value;
+            const password = document.getElementById('meetingPassword').value;
+
+            if (!meetingId || !name) {
+                showToast('Please enter meeting ID and your name', 'error');
+                return;
+            }
+
+            let url = `https://zoom.us/j/${meetingId}`;
+            if (password) url += `?pwd=${password}`;
+            else url += `?uname=${encodeURIComponent(name)}`;
+
+            window.open(url, '_blank');
+            toggleModal('joinMeetingModal', false);
+        }
+
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if (show) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toastNotification');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingMeetings').style.display = show ? 'block' : 'none';
+            document.getElementById('meetingsContainer').style.display = show ? 'none' : 'block';
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            const icon = document.querySelector('#themeToggle i');
+            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function animateTitle() {
+            const titles = [
+                "Zoom Communication",
+                "Meet Your Buddy",
+                "Coach Your Students",
+                "Learn Together"
+            ];
+            let current = 0;
+
+            setInterval(() => {
+                document.getElementById('dynamicTitle').textContent = titles[current];
+                current = (current + 1) % titles.length;
+            }, 3000);
+        }
+
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.querySelector('#themeToggle i').className = 'fas fa-sun';
+        }
+    </script>
+</body>
+
+</html>

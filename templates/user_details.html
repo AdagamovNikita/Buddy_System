@@ -64,7 +64,7 @@
 <body>
     <div class="header-navbar">
         <div class="navbar">
-            <a href="{{ url_for(session['role'] + '_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
             <a href="{{ url_for('admin_view_users') }}">Users</a>
             <a href="{{ url_for('admin_all_matches') }}">Matches</a>
             <a href="{{ url_for('logout') }}">Logout</a>

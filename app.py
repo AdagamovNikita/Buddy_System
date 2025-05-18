@@ -449,44 +449,6 @@ def initialize_db():
             sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
-        CREATE TABLE IF NOT EXISTS video_calls (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            initiator_id INTEGER,
-            recipient_id INTEGER,
-            scheduled_time TIMESTAMP,
-            duration_minutes INTEGER,
-            call_status TEXT CHECK(call_status IN ('scheduled', 'completed', 'missed', 'canceled')),
-            notes TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS interactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            match_id INTEGER,
-            interaction_type TEXT CHECK(interaction_type IN ('message', 'call', 'meeting', 'event')),
-            points_earned INTEGER DEFAULT 0,
-            interaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            duration_minutes INTEGER,
-            notes TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS leaderboard (
-            user_id INTEGER PRIMARY KEY,
-            total_points INTEGER DEFAULT 0,
-            current_rank INTEGER,
-            last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS feedback (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            reviewer_id INTEGER,
-            reviewed_id INTEGER,
-            match_id INTEGER,
-            rating INTEGER CHECK(rating BETWEEN 1 AND 5),
-            comments TEXT,
-            is_anonymous BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
         CREATE TABLE IF NOT EXISTS events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT,
@@ -509,43 +471,6 @@ def initialize_db():
             PRIMARY KEY (event_id, user_id)
         );
 
-        CREATE TABLE IF NOT EXISTS availability (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            day_of_week INTEGER CHECK(day_of_week BETWEEN 0 AND 6),
-            start_time TIME,
-            end_time TIME,
-            is_recurring BOOLEAN DEFAULT TRUE
-        );
-
-        CREATE TABLE IF NOT EXISTS scheduled_sessions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            match_id INTEGER,
-            scheduled_time TIMESTAMP,
-            duration_minutes INTEGER,
-            session_type TEXT CHECK(session_type IN ('academic', 'social', 'career', 'other')),
-            status TEXT CHECK(status IN ('scheduled', 'completed', 'canceled', 'no-show')) DEFAULT 'scheduled',
-            location TEXT,
-            notes TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS admin_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            action_type TEXT,
-            target_user_id INTEGER,
-            description TEXT,
-            performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS announcements (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
-            content TEXT,
-            target_roles TEXT,
-            is_pinned BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
         CREATE TABLE IF NOT EXISTS notifications (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -560,8 +485,6 @@ def initialize_db():
 
         CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
         CREATE INDEX IF NOT EXISTS idx_buddy_matches_status ON buddy_matches(status);
-        CREATE INDEX IF NOT EXISTS idx_interactions_match_id ON interactions(match_id);
-        CREATE INDEX IF NOT EXISTS idx_scheduled_sessions_match_id ON scheduled_sessions(match_id);
         CREATE INDEX IF NOT EXISTS idx_events_start_time ON events(start_time);
         """
     )
@@ -1402,17 +1325,6 @@ def buddy_dashboard():
             (session["user_id"],),
         ).fetchall()
 
-        sessions = conn.execute(
-            """SELECT ss.*, u.full_name as student_name, 
-               datetime(ss.scheduled_time) as formatted_scheduled_time
-               FROM scheduled_sessions ss
-               JOIN buddy_matches bm ON ss.match_id = bm.id
-               JOIN users u ON bm.student_id = u.id
-               WHERE bm.buddy_id = ? AND ss.status = 'scheduled'
-               ORDER BY ss.scheduled_time LIMIT 5""",
-            (session["user_id"],),
-        ).fetchall()
-
         events = conn.execute(
             """SELECT *, datetime(start_time) as formatted_start_time 
                FROM events 
@@ -1427,7 +1339,6 @@ def buddy_dashboard():
             matches=matches,
             approved_matches=approved_matches,
             pending_matches=pending_matches,
-            sessions=sessions,
             events=events,
         )
     finally:

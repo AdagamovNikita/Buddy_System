@@ -26,8 +26,9 @@
         .shepherd-target-clickable {
             cursor: pointer !important;
         }
+
         .tippy-box[data-theme~="buddy"] {
-            transform: translateZ(999999px); 
+            transform: translateZ(999999px);
         }
 
         .tippy-box[data-theme~="buddy-soft"] {
@@ -37,6 +38,7 @@
         .chat-button {
             z-index: 999999;
         }
+
         .tippy-box {
             z-index: 99999 !important;
         }
@@ -44,6 +46,7 @@
         .shepherd-element {
             z-index: 999999 !important;
         }
+
         .shepherd-button-primary {
             background: #871f2d !important;
             color: white !important;
@@ -56,12 +59,13 @@
             color: #444 !important;
             margin-right: 8px !important;
         }
+
         .tippy-box[data-theme~="buddy"] {
             background: linear-gradient(135deg, #871f2d 30%, #2d87bb 100%);
             color: white;
             font-weight: 500;
             border-radius: 12px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
             font-family: 'Arial', sans-serif;
             max-width: 300px;
             text-align: center;
@@ -106,10 +110,22 @@
         }
 
         @keyframes element-pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(135, 31, 45, 0.4); }
-            70% { transform: scale(1.02); box-shadow: 0 0 0 12px rgba(135, 31, 45, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(135, 31, 45, 0); }
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(135, 31, 45, 0.4);
+            }
+
+            70% {
+                transform: scale(1.02);
+                box-shadow: 0 0 0 12px rgba(135, 31, 45, 0);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(135, 31, 45, 0);
+            }
         }
+
         .events-card {
             background: white;
             border-radius: var(--border-radius);
@@ -149,6 +165,7 @@
         .error-message {
             color: var(--danger);
         }
+
         .zoom-card {
             background-color: white;
             padding: 20px;
@@ -667,42 +684,6 @@
                 max-height: 400px;
             }
         }
-        .calendar-button {
-            position: fixed;
-            bottom: 20px;
-            right: 1450px;
-            background-color: #871f2d;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: all 0.2s;
-            text-decoration: none;
-        }
-
-        .calendar-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-            background-color: #6a1825;
-        }
-
-        @media (max-width: 768px) {
-            .calendar-button {
-                bottom: 80px;
-                right: 15px;
-                width: 50px;
-                height: 50px;
-                font-size: 20px;
-            }
-        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -710,16 +691,11 @@
 <body>
     <div class="header-navbar">
         <div class="navbar">
-            <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
-            <a href="#">My Buddies</a>
-            <a href="#">Events</a>
+            <a href="{{ url_for(session['role'] + '_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('calendar') }}">Calendar</a>
             <a href="{{ url_for('logout') }}">Logout</a>
         </div>
         <h1 class="header-title">Student Dashboard</h1>
-    </div>
-        <a href="{{ url_for('calendar') }}" class="calendar-button">
-            <i class="fas fa-calendar-alt"></i>
-        </a>
     </div>
     <div class="container">
         <div class="dashboard-container">
@@ -889,64 +865,6 @@
     </div>
 
     <script>
-        function initTooltips() {
-            tippy('.interest-tag', {
-                content: 'Click to find buddies with this interest',
-                theme: 'buddy-soft',
-                placement: 'top'
-            });
-
-            tippy('.zoom-button', {
-                content: 'Manage your Zoom meetings',
-                theme: 'buddy',
-                placement: 'top'
-            });
-
-            tippy('.notification-bell', {
-                content: 'Your notifications center',
-                theme: 'buddy',
-                placement: 'left'
-            });
-            tippy('.profile-pic', {
-                content: '✨ Click to update your profile photo',
-                theme: 'buddy',
-                placement: 'right-start',
-                animation: 'fade',
-                arrow: true,
-                interactive: true,
-                allowHTML: true
-            });
-
-            tippy('.select-buddy-btn', {
-                content: '<strong>AI-Powered Matching</strong><br>Find your perfect study partner!',
-                theme: 'buddy',
-                placement: 'bottom',
-                animation: 'scale',
-                delay: [100, 50],
-                arrow: true,
-                allowHTML: true
-            });
-
-            tippy('.chat-button', {
-                content: '<i class="fas fa-comments"></i> Real-time chat with your buddies',
-                theme: 'buddy',
-                placement: 'left',
-                animation: 'shift-away',
-                arrow: true,
-                allowHTML: true
-            });
-
-            tippy('.calendar-button', {
-                content: '📅 Sync with your academic calendar',
-                theme: 'buddy-soft',
-                placement: 'right',
-                animation: 'fade',
-                arrow: true
-            });
-
-  
-        }
-
         function initGuidedTour() {
             const tour = new Shepherd.Tour({
                 defaultStepOptions: {
@@ -962,7 +880,7 @@
                 title: '🌟 Welcome!',
                 text: `Let's explore your dashboard in just a minute!`,
                 buttons: [
-                    { 
+                    {
                         text: 'Next →',
                         action: tour.next,
                         classes: 'shepherd-button-primary'
@@ -982,17 +900,17 @@
                     on: 'right'
                 },
                 buttons: [
-                    { 
+                    {
                         text: 'Back ←',
                         action: tour.back,
                         classes: 'shepherd-button-secondary'
                     },
-                    { 
+                    {
                         text: 'Next →',
                         action: tour.next
                     }
                 ],
-                beforeShowPromise: function() {
+                beforeShowPromise: function () {
                     document.querySelector('.profile-card').classList.add('tour-highlight');
                 },
                 when: {
@@ -1010,17 +928,17 @@
                     on: 'right'
                 },
                 buttons: [
-                    { 
+                    {
                         text: 'Back ←',
                         action: tour.back,
                         classes: 'shepherd-button-secondary'
                     },
-                    { 
+                    {
                         text: 'Next →',
                         action: tour.next
                     }
                 ],
-                beforeShowPromise: function() {
+                beforeShowPromise: function () {
                     document.querySelector('.interests-list').classList.add('tour-highlight');
                 },
                 when: {
@@ -1038,17 +956,17 @@
                     on: 'left'
                 },
                 buttons: [
-                    { 
+                    {
                         text: 'Back ←',
                         action: tour.back,
                         classes: 'shepherd-button-secondary'
                     },
-                    { 
+                    {
                         text: 'Next →',
                         action: tour.next
                     }
                 ],
-                beforeShowPromise: function() {
+                beforeShowPromise: function () {
                     document.querySelector('.matches-card').classList.add('tour-highlight');
                 },
                 when: {
@@ -1066,17 +984,17 @@
                     on: 'left'
                 },
                 buttons: [
-                    { 
+                    {
                         text: 'Back ←',
                         action: tour.back,
                         classes: 'shepherd-button-secondary'
                     },
-                    { 
+                    {
                         text: 'Next →',
                         action: tour.next
                     }
                 ],
-                beforeShowPromise: function() {
+                beforeShowPromise: function () {
                     document.querySelector('.events-card').classList.add('tour-highlight');
                 },
                 when: {
@@ -1094,17 +1012,17 @@
                     on: 'left'
                 },
                 buttons: [
-                    { 
+                    {
                         text: 'Back ←',
                         action: tour.back,
                         classes: 'shepherd-button-secondary'
                     },
-                    { 
+                    {
                         text: 'Next →',
                         action: tour.next
                     }
                 ],
-                beforeShowPromise: function() {
+                beforeShowPromise: function () {
                     document.querySelector('#pending-matches').classList.add('tour-highlight');
                 },
                 when: {
@@ -1122,17 +1040,17 @@
                     on: 'left'
                 },
                 buttons: [
-                    { 
+                    {
                         text: 'Back ←',
                         action: tour.back,
                         classes: 'shepherd-button-secondary'
                     },
-                    { 
+                    {
                         text: 'Finish!',
                         action: tour.complete
                     }
                 ],
-                beforeShowPromise: function() {
+                beforeShowPromise: function () {
                     document.querySelector('.zoom-card').classList.add('tour-highlight');
                 },
                 when: {
@@ -1152,8 +1070,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             initTooltips();
             initGuidedTour();
-            enhanceChatTooltips();  
-    
+            enhanceChatTooltips();
+
             const sessionUserId = "{{ session.get('user_id') }}";
         });
 
@@ -1451,8 +1369,8 @@
             updateUnreadCount();
             setInterval(updateUnreadCount, 30000);
         });
- 
-        document.addEventListener('DOMContentLoaded', function() {
+
+        document.addEventListener('DOMContentLoaded', function () {
             function renderUpcomingEvents(events) {
                 const container = document.getElementById('upcoming-events-list');
                 container.innerHTML = '';
@@ -1462,7 +1380,7 @@
                     return;
                 }
 
-                const sortedEvents = events.sort((a, b) => 
+                const sortedEvents = events.sort((a, b) =>
                     new Date(a.start_time) - new Date(b.start_time));
 
                 sortedEvents.slice(0, 5).forEach(event => {
@@ -1473,7 +1391,7 @@
                         <h4>${event.title}</h4>
                         <p>
                             ${eventDate.toLocaleDateString()} 
-                            ${eventDate.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                            ${eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             - ${event.event_type}
                         </p>
                     `;
@@ -1488,7 +1406,7 @@
                     const events = await response.json();
                     renderUpcomingEvents(events);
                 } catch (error) {
-                    document.getElementById('upcoming-events-list').innerHTML = 
+                    document.getElementById('upcoming-events-list').innerHTML =
                         '<p class="error-message">Error loading events. Please refresh the page.</p>';
                     console.error('Event load error:', error);
                 }

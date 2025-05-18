@@ -136,10 +136,8 @@
 <body>
     <div class="header-navbar">
         <div class="navbar">
-            <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('view_potential_matches') }}">Find Buddies</a>
-            <a href="#">My Buddies</a>
-            <a href="#">Events</a>
+            <a href="{{ url_for(session['role'] + '_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('calendar') }}">Calendar</a>
             <a href="{{ url_for('logout') }}">Logout</a>
         </div>
         <h1 class="header-title">Buddy Profile</h1>

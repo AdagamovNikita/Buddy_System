@@ -1,77 +1,98 @@
-# Buddy System
+# Buddy System: Academic Mentorship Platform
 
-Buddy System is a web-based platform designed to facilitate mentoring and peer support within educational institutions. The application connects junior students with experienced peers (buddies) to support their academic and social integration.
+**Buddy System** is a web-based platform designed to connect junior students with experienced mentors. The application helps students integrate into university life through a smart pairing system and built-in communication tools.
 
-## My Role: System Analyst & Architect
+---
 
-In this project, I served primarily as the System Analyst and Core Architect. My key responsibilities and contributions included:
+## My Role: System Analyst & Database Designer
 
-* Technology Stack Selection: Evaluated and selected the appropriate frameworks and libraries to ensure rapid development, maintainability, and scalability.
-* Architectural Design: Engineered a monolithic backend architecture utilizing Flask, ensuring clear separation of concerns between routing, business logic, and data access layers.
-* Database Architecture: Designed the complete relational database schema from scratch. I mapped out entity-relationship models for users, complex role management, student profiles, matching preferences, dynamic scheduling, and messaging. 
-* Implementation: Actively participated in the backend implementation, particularly focusing on translating the designed database schema into functional SQLite structures and developing the core pairing algorithm.
+In this project, I focused on the technical planning and the data architecture. My goal was to transform university requirements into a solid technical structure, focusing on how the data should be organized and how the system should function.
+
+* **Technology Stack Selection:** I evaluated and selected the project tools (Flask, SQLite, and JWT). I chose this stack to balance fast development with security and reliability.
+* **Database Design & Implementation:** I designed the entire relational database from the ground up. This included all three professional phases: **Conceptual, Logical, and Physical design**. I mapped out entities for users, roles, student profiles, and scheduling. I also personally implemented the database layer using raw SQL to ensure high performance.
+* **System Planning:** I defined the overall structure of the platform. I ensured a "separation of concerns" so that the business logic, database interactions, and user interface remained organized and easy to manage.
+
+---
+
+## Key Features
+
+### 1. Role-Based Access Control (RBAC)
+The system uses three distinct permission levels to manage access and security:
+* **Administrator:** Manages the platform, approves mentor applications, and monitors matches.
+* **Buddy (Mentor):** Manages student requests, hosts sessions, and tracks mentee progress.
+* **Student (Mentee):** Browses for mentors based on preferences and schedules meetings.
+
+### 2. Automated Zoom Integration
+To simplify online meetings, I integrated the **Zoom API (OAuth 2.0)**. The system automatically creates a unique meeting link whenever a student and mentor schedule a session, removing the need for manual setup.
+
+### 3. Smart Matching Logic
+The platform uses a scoring system to pair students with the best possible mentors based on:
+* **Major & Specialization:** Matching users within the same academic field.
+* **Language:** Finding mentors who speak the same native or secondary languages.
+* **Seniority:** Prioritizing experienced students as mentors for newcomers.
+* **Interests:** Connecting students with shared hobbies and extracurriculars.
+
+---
 
 ## Technology Stack
 
-* Backend: Python 3, Flask
-* Database: SQLite (Raw SQL with sqlite3.Row for optimized data retrieval)
-* Frontend: HTML5, CSS3, Jinja2 Templates
-* Forms & Validation: WTForms, Flask-WTF
-* Security & Authentication: JWT (JSON Web Tokens), Flask-Session, secure password hashing
-* External Integrations: Zoom API (OAuth-based meeting generation)
+| Layer | Technology |
+| :--- | :--- |
+| **Backend** | Python 3, Flask |
+| **Database** | SQLite (Raw SQL with `sqlite3.Row` for efficiency) |
+| **Frontend** | HTML5, CSS3, Jinja2 Templates |
+| **Security** | JWT (JSON Web Tokens), Flask-Session, Secure Password Hashing |
+| **Integrations** | Zoom API (OAuth 2.0) |
+| **Forms** | WTForms / Flask-WTF |
 
-## Core Architecture
+---
 
-The system is built on a monolithic Flask architecture:
-* app.py: The core application file managing routing, business logic controllers, database interactions, and Zoom API token management.
-* config.py: Centralized environment variable management.
-* forms.py: Declarative form definitions and validation logic.
-* templates/ & static/: Server-side rendered views and static assets.
-* Database Layer: Auto-initialized SQLite database (buddy_system.db) designed to handle user relations, session tracking, and matching states without the overhead of an ORM.
+## Project Structure
 
-## System Capabilities
+```text
+├── app.py              # Core application logic and routing
+├── config.py           # Environment and security settings
+├── forms.py            # Data validation and form definitions
+├── buddy_system.db     # Optimized SQLite database
+├── static/             # CSS, JavaScript, and images
+└── templates/          # Jinja2 HTML templates
+```
 
-### Role-Based Access Control
-The application supports three distinct user scopes:
-* Administrator: Manages the platform, approves buddy applications, monitors matches, and oversees the user base.
-* Buddy (Mentor): Subject to admin approval. Can accept student requests, manage sessions, and communicate with mentees.
-* Student (Mentee): Can configure matching preferences, browse potential mentors, schedule meetings, and participate in events.
-
-### Advanced Matching Algorithm
-A core feature of the system is the custom matching algorithm I designed. It pairs students and buddies based on a 100-point scoring system considering:
-* Major and academic specialization (+30 points)
-* Native and secondary language overlap (up to +25 points)
-* Academic year difference (prioritizing reasonable seniority gaps)
-* Shared interests and hobbies
-* Mentor workload balancing (reducing visibility for overloaded buddies)
-
-### Integrated Scheduling and Zoom API
-The system provides built-in calendar functionality. I integrated the Zoom API via OAuth to automatically generate meeting links when a student and a buddy schedule a session, completely abstracting the manual meeting creation process.
+---
 
 ## Local Setup Instructions
 
-1. Clone the repository
-git clone https://github.com/AdagamovNikita/Buddy_System.git
-cd BuddySystem
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/AdagamovNikita/Buddy_System.git
+    cd BuddySystem
+    ```
 
-2. Set up a virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
+2.  **Initialize Virtual Environment**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
 
-3. Install dependencies
-pip install Flask requests PyJWT python-dotenv Flask-WTF WTForms
+3.  **Install Dependencies**
+    ```bash
+    pip install Flask requests PyJWT python-dotenv Flask-WTF WTForms
+    ```
 
-4. Configure environment variables
-Create a .env file in the root directory and define the following variables:
-FLASK_SECRET_KEY=your_secret_key
-ZOOM_API_KEY=your_zoom_client_id
-ZOOM_API_SECRET=your_zoom_client_secret
+4.  **Configure Environment**
+    Create a `.env` file in the root folder:
+    ```env
+    FLASK_SECRET_KEY=your_secret_key
+    ZOOM_API_KEY=your_zoom_client_id
+    ZOOM_API_SECRET=your_zoom_client_secret
+    ```
 
-5. Run the application
-python app.py
+5.  **Run the Application**
+    ```bash
+    python app.py
+    ```
+    The application will be available at `http://127.0.0.1:5000`.
 
-The application will start at http://127.0.0.1:5000. The database (buddy_system.db) is automatically initialized on the first run.
-
-Default Administrator Credentials:
-Email: admin@aubmed.ac.cy
-Password: Admin
+**Default Admin Credentials:**
+* **Email:** `admin@aubmed.ac.cy`
+* **Password:** `Admin`

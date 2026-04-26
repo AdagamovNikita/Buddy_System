@@ -1,95 +1,77 @@
-# BuddySystem 🎓🤝
+# Buddy System
 
-BuddySystem — это комплексная веб-платформа, созданная для учебных заведений, цель которой — помощь студентам в поиске наставников (Buddies) среди старшекурсников или более опытных товарищей. Платформа упрощает процесс социальной и академической адаптации студентов.
+Buddy System is a web-based platform designed to facilitate mentoring and peer support within educational institutions. The application connects junior students with experienced peers (buddies) to support their academic and social integration.
 
-## 🛠 Технологический стек
-* **Язык программирования:** Python 3
-* **Бэкенд-фреймворк:** Flask
-* **База данных:** SQLite (встроенная реляционная БД `buddy_system.db`)
-* **Фронтенд:** HTML5, CSS3, Jinja2 (шаблонизатор Flask)
-* **Работа с формами:** Flask-WTF / WTForms
-* **Аутентификация и безопасность:** JWT (JSON Web Tokens), Flask-Session, безопасное хэширование паролей.
-* **Интеграция сторонних API:** Zoom API (для автоматического создания и планирования видеоконференций).
+## My Role: System Analyst & Architect
 
-## 🏗 Архитектура проекта
-Проект построен по классической монолитной архитектуре (Monolithic Architecture) на базе Flask:
-* **`app.py`:** Ядро приложения. Содержит логику маршрутизации (роутинг), контроллеры, обработку бизнес-логики и прямые SQL-запросы к базе данных SQLite.
-* **`config.py`:** Конфигурационный файл для управления переменными окружения (ключи Zoom API, секретные ключи приложения).
-* **`forms.py`:** Декларативное описание всех веб-форм приложения с правилами валидации данных.
-* **`templates/`:** Директория с HTML-страницами (View), которые рендерятся сервером на лету.
-* **`static/`:** Статические ассеты (CSS стили, изображения).
-* **Система хранения:** База данных `buddy_system.db` генерируется автоматически при первом запуске (через `initialize_db()`).
+In this project, I served primarily as the System Analyst and Core Architect. My key responsibilities and contributions included:
 
-## ✨ Основные возможности платформы
+* Technology Stack Selection: Evaluated and selected the appropriate frameworks and libraries to ensure rapid development, maintainability, and scalability.
+* Architectural Design: Engineered a monolithic backend architecture utilizing Flask, ensuring clear separation of concerns between routing, business logic, and data access layers.
+* Database Architecture: Designed the complete relational database schema from scratch. I mapped out entity-relationship models for users, complex role management, student profiles, matching preferences, dynamic scheduling, and messaging. 
+* Implementation: Actively participated in the backend implementation, particularly focusing on translating the designed database schema into functional SQLite structures and developing the core pairing algorithm.
 
-### 1. Ролевая система доступа
-В системе предусмотрено 3 типа пользователей со своими уникальными дашбордами:
-* **Admin (Администратор):** Управляет платформой. Одобряет заявки наставников, мониторит созданные пары (matches), управляет списком всех пользователей.
-* **Buddy (Наставник):** Проходит ручную модерацию. Принимает заявки от студентов, ведет с ними переписку, назначает встречи и помогает с учебой.
-* **Student (Студент):** Заполняет профиль, ищет подходящих наставников, записывается на мероприятия и отправляет запросы на менторство.
+## Technology Stack
 
-### 2. Умный алгоритм подбора (Matching Algorithm)
-Платформа оснащена кастомной системой скоринга, которая подбирает идеального наставника на основе 100-балльной шкалы:
-* Точное совпадение специальности (Major) — `+30 баллов`
-* Совпадение родного и дополнительных языков — `до +25 баллов`
-* Разница в курсе обучения (приоритет отдается старшекурсникам с разницей в 1-2 года) — `до +20 баллов`
-* Общие интересы и хобби — `до +20 баллов`
-* Учет текущей нагрузки наставника (чем меньше студентов у Buddy, тем он выше в выдаче).
+* Backend: Python 3, Flask
+* Database: SQLite (Raw SQL with sqlite3.Row for optimized data retrieval)
+* Frontend: HTML5, CSS3, Jinja2 Templates
+* Forms & Validation: WTForms, Flask-WTF
+* Security & Authentication: JWT (JSON Web Tokens), Flask-Session, secure password hashing
+* External Integrations: Zoom API (OAuth-based meeting generation)
 
-### 3. Интеграция с Zoom
-* Поддержка авторизации Zoom OAuth (с автоматическим обновлением токенов).
-* Студенты и наставники могут планировать сессии, и система автоматически генерирует ссылки на Zoom-встречи.
+## Core Architecture
 
-### 4. Календарь и Мероприятия (Events)
-* Встроенный календарь для отслеживания предстоящих встреч.
-* Администраторы и наставники могут создавать публичные или приватные мероприятия (воркшопы, лекции).
-* Элементы геймификации: система начисления баллов (points) за посещение мероприятий.
+The system is built on a monolithic Flask architecture:
+* app.py: The core application file managing routing, business logic controllers, database interactions, and Zoom API token management.
+* config.py: Centralized environment variable management.
+* forms.py: Declarative form definitions and validation logic.
+* templates/ & static/: Server-side rendered views and static assets.
+* Database Layer: Auto-initialized SQLite database (buddy_system.db) designed to handle user relations, session tracking, and matching states without the overhead of an ORM.
 
-## 🚀 Инструкция по локальному запуску
+## System Capabilities
 
-### Шаг 1. Клонирование репозитория
-```bash
-git clone git@github.com:AdagamovNikita/Buddy_System.git
+### Role-Based Access Control
+The application supports three distinct user scopes:
+* Administrator: Manages the platform, approves buddy applications, monitors matches, and oversees the user base.
+* Buddy (Mentor): Subject to admin approval. Can accept student requests, manage sessions, and communicate with mentees.
+* Student (Mentee): Can configure matching preferences, browse potential mentors, schedule meetings, and participate in events.
+
+### Advanced Matching Algorithm
+A core feature of the system is the custom matching algorithm I designed. It pairs students and buddies based on a 100-point scoring system considering:
+* Major and academic specialization (+30 points)
+* Native and secondary language overlap (up to +25 points)
+* Academic year difference (prioritizing reasonable seniority gaps)
+* Shared interests and hobbies
+* Mentor workload balancing (reducing visibility for overloaded buddies)
+
+### Integrated Scheduling and Zoom API
+The system provides built-in calendar functionality. I integrated the Zoom API via OAuth to automatically generate meeting links when a student and a buddy schedule a session, completely abstracting the manual meeting creation process.
+
+## Local Setup Instructions
+
+1. Clone the repository
+git clone https://github.com/AdagamovNikita/Buddy_System.git
 cd BuddySystem
-```
 
-### Шаг 2. Создание виртуального окружения
-Настоятельно рекомендуется использовать виртуальное окружение:
-```bash
-# Для Windows:
+2. Set up a virtual environment
 python -m venv venv
-venv\Scripts\activate
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
 
-# Для macOS/Linux:
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### Шаг 3. Установка зависимостей
-Создайте файл `requirements.txt` (если его нет) со следующим содержимым или установите пакеты напрямую:
-```bash
+3. Install dependencies
 pip install Flask requests PyJWT python-dotenv Flask-WTF WTForms
-```
 
-### Шаг 4. Настройка переменных окружения
-Создайте файл `.env` в корне проекта и добавьте следующие ключи:
-```env
-FLASK_SECRET_KEY=your_super_secret_key_here
-ZOOM_API_KEY=ваш_zoom_client_id
-ZOOM_API_SECRET=ваш_zoom_client_secret
-```
+4. Configure environment variables
+Create a .env file in the root directory and define the following variables:
+FLASK_SECRET_KEY=your_secret_key
+ZOOM_API_KEY=your_zoom_client_id
+ZOOM_API_SECRET=your_zoom_client_secret
 
-### Шаг 5. Запуск приложения
-Запустите главный файл `app.py`:
-```bash
+5. Run the application
 python app.py
-# или
-flask run
-```
 
-Приложение будет доступно в браузере по адресу: [http://127.0.0.1:5000](http://127.0.0.1:5000). 
-База данных `buddy_system.db` будет создана автоматически.
+The application will start at http://127.0.0.1:5000. The database (buddy_system.db) is automatically initialized on the first run.
 
-*Для входа в панель администратора по умолчанию используются реквизиты:*
-* **Email:** `admin@aubmed.ac.cy`
-* **Password:** `Admin`
+Default Administrator Credentials:
+Email: admin@aubmed.ac.cy
+Password: Admin

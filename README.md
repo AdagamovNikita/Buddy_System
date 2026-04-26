@@ -1,8 +1,9 @@
+<img width="1024" height="559" alt="b55fe251-52fd-4bff-857e-94c5d3b4decd" src="https://github.com/user-attachments/assets/9a29f547-5751-4f68-aff0-a07fff9b9f0d" />
+
 # Buddy System: Academic Mentorship Platform
 
 **Buddy System** is a web-based platform designed to connect junior students with experienced mentors. The application helps students integrate into university life through a smart pairing system and built-in communication tools.
 
----
 
 ## My Role: System Analyst & Database Designer
 
@@ -12,7 +13,6 @@ In this project, I focused on the technical planning and the data architecture. 
 * **Database Design & Implementation:** I designed the entire relational database from the ground up. This included all three professional phases: **Conceptual, Logical, and Physical design**. I mapped out entities for users, roles, student profiles, and scheduling. I also personally implemented the database layer using raw SQL to ensure high performance.
 * **System Planning:** I defined the overall structure of the platform. I ensured a "separation of concerns" so that the business logic, database interactions, and user interface remained organized and easy to manage.
 
----
 
 ## Key Features
 
@@ -32,7 +32,6 @@ The platform uses a scoring system to pair students with the best possible mento
 * **Seniority:** Prioritizing experienced students as mentors for newcomers.
 * **Interests:** Connecting students with shared hobbies and extracurriculars.
 
----
 
 ## Technology Stack
 
@@ -45,7 +44,6 @@ The platform uses a scoring system to pair students with the best possible mento
 | **Integrations** | Zoom API (OAuth 2.0) |
 | **Forms** | WTForms / Flask-WTF |
 
----
 
 ## Project Structure
 
@@ -58,7 +56,6 @@ The platform uses a scoring system to pair students with the best possible mento
 └── templates/          # Jinja2 HTML templates
 ```
 
----
 
 ## Local Setup Instructions
 

@@ -16,7 +16,7 @@ In this project, I focused on the technical planning and the data architecture. 
 
 ## Key Features
 
-### 1. Role-Based Access Control (RBAC)
+### 1. Role-Based Access Control 
 The system uses three distinct permission levels to manage access and security:
 * **Administrator:** Manages the platform, approves mentor applications, and monitors matches.
 * **Buddy (Mentor):** Manages student requests, hosts sessions, and tracks mentee progress.
